@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+bin/*
+!bin/Fraserdata-georeferenced.csv
+!bin/NoAm_boundary_aea.rds
+!bin/my_isoscapes.RData
+!bin/range_raster.Rdata
