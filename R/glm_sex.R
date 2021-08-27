@@ -27,7 +27,7 @@ mdf %>%
   ggplot() +
   aes(x = OriginCluster, fill = Sex) %>%
   geom_bar(stat ="count", position=position_dodge()) +
-  facet_grid(wind_killed~Species) +
+  facet_grid(wind_killed~commonName) +
   theme_bw() +
   labs( title = "Sampling Counts")
 
@@ -36,16 +36,16 @@ mdf %>%
 
 mdf %>%
   filter(!is.na(Sex)) %>%
-  group_by(Species, OriginCluster, wind_killed, Sex) %>% summarise(n=n()) %>%
-  group_by(Species, OriginCluster,wind_killed) %>% mutate(prop = n/sum(n)) %>%
+  group_by(commonName, OriginCluster, wind_killed, Sex) %>% summarise(n=n()) %>%
+  group_by(commonName, OriginCluster,wind_killed) %>% mutate(prop = n/sum(n)) %>%
   filter(Sex == "F") %>%
   ggplot() +
   geom_hline(yintercept=0.5, linetype = 2) +
   aes(x = OriginCluster, y = prop, fill = wind_killed) +
   geom_col(position = position_dodge(), color = "grey50") +
   scale_fill_viridis_d(option = 5) +
-  facet_wrap(~Species) +
-  facet_grid(wind_killed~Species) +
+  facet_wrap(~commonName) +
+  facet_grid(wind_killed~commonName) +
   theme_bw() +
   theme(
     plot.caption.position = "plot",
@@ -61,7 +61,7 @@ mdf2 <- mdf %>%
   mutate(sex_01 = case_when(Sex == "F" ~ 1, Sex == "M" ~ 0, TRUE ~ as.numeric(NA)))
 
 # logistic regression to do that.
-m_sex <- glm( sex_01 ~ OriginCluster + wind_killed + Species:OriginCluster:wind_killed + Species:OriginCluster + Species:wind_killed,
+m_sex <- glm( sex_01 ~ OriginCluster + wind_killed + commonName:OriginCluster:wind_killed + commonName:OriginCluster + commonName:wind_killed,
   data = mdf2, na.action = "na.fail",
   family = binomial(link = "logit")
   )
@@ -78,16 +78,17 @@ m_sum$coefficients %>%
   mutate_if(is.numeric, signif, digits = 2) %>%
   knitr::kable()
 
-pp <- sjPlot::plot_model(m_sex, type = "pred", terms = c("OriginCluster", "wind_killed", "Species"))
+pp <- sjPlot::plot_model(m_sex, type = "pred", terms = c("OriginCluster", "wind_killed", "commonName"))
 
-pp +
+(myPlot_sex <- pp +
   ggpubr::theme_pubr() +
   scale_color_viridis_d(option = 5) +
   scale_fill_viridis_d( option = 5) +
   geom_hline(yintercept = 0.5, linetype = 2) +
-  ylab("Likelihood of individual being FEMALE") +
+  ylab("Likelihood of individual identified as female") +
   ggtitle("Predicted probability of sex:female") +
   theme(
     legend.position = "right"
-  )
+  ))
 
+ggsave(myPlot_sex, filename = file.path(wd$figs, "model_sex_ouput.png"))
