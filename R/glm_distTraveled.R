@@ -1,12 +1,11 @@
 ## ----setup --------------------------------------------------------
 library(tidyverse)
-library(sf)
 library(ggpubr)
 library(gridExtra)
 library(sjPlot)
-
 library(car)
 library(MuMIn)
+library(caret)
 
 mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") )
 
@@ -14,20 +13,28 @@ theme_set(ggpubr::theme_pubclean())
 options(na.action = "na.fail")
 
 
-## ----transformVariables----------------------------------------------------------
+# Quick fun to return params to include in the next model.
+topDredgeModelPredictors <- function(dredgeModelOutput) {
+  dredgeModelOutput %>%
+    # Find top-performing model
+    filter(delta < 2) %>% arrange(df) %>% slice(1) %>% as.data.frame %>%
+    # Pull out predictors.
+    dplyr::select(-c("(Intercept)", "df", "AICc", "delta", "weight", "logLik")) %>%
+    # Make a df.
+    t %>% as.data.frame() ->
+    step1
+  print(paste0("Drop: ", row.names(filter(step1, is.na(V1))) ) )
+  print(paste0("Keep: ", row.names(filter(step1, !is.na(V1))) ) )
+}
 
-mdf <- mydata_minDistDir %>%
-  filter(
-    !is.na(dist_km),
-    !is.na(OriginCluster),
-    !is.na(yDay)
-    ) %>%
-  dplyr::mutate(
-  didMove = case_when(
-    dist  %in% c("mid", "long") ~ 1,
-    dist  %in% c("short")  ~ 0
-    )
-  )
+# Quick fun to return params with too-high VIF.
+dropVIF <- function(vifOUT) {
+  vifOUT %>%
+    as.data.frame %>%
+    filter(`GVIF^(1/(2*Df))` >= 5) %>%
+    row.names() -> p
+  print(paste0("Consider dropping: ", p))
+}
 
 ## ----plotPosSkew-----------------------------------------------------------------
 
@@ -49,7 +56,10 @@ ggarrange(
 )
 
 
-## ----prep df, echo = F, message=F, results=FALSE---------------------------------
+# Model selection ---------------------------------------------------------
+
+
+## Model A -- didMove ----
 m1 <- glm(
   didMove ~
     commonName +
@@ -69,8 +79,8 @@ m1 <- glm(
   family = binomial(link = "logit")
 )
 
-d1 <- MuMIn::dredge(m1)
-d1 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
+d1 <- MuMIn::dredge(m1, beta = "none")
+d1 %>% topDredgeModelPredictors
 
 m2 <- glm(
   didMove ~
@@ -79,12 +89,12 @@ m2 <- glm(
     OriginCluster +
     wind_killed +
     decimalLatitude +
-    #commonName:poly(yday2, 2) +
+    # commonName:poly(yday2, 2) +
     commonName:OriginCluster +
     commonName:wind_killed +
     commonName:decimalLatitude +
     poly(yday2, 2):OriginCluster #+
-  #commonName:poly(yday2, 2):OriginCluster
+  # commonName:poly(yday2, 2):OriginCluster
   ,
   data = mdf,
   na.action = "na.fail",
@@ -92,23 +102,28 @@ m2 <- glm(
 )
 
 d2 <- MuMIn::dredge(m2)
-d2 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(m2)
-m2$coefficients
+d2 %>% topDredgeModelPredictors
+# Stable model.
+dropVIF(car::vif(m2))
+
+# https://stats.stackexchange.com/questions/106344/how-to-quantify-the-relative-variable-importance-in-logistic-regression-in-terms
+library(caret)
+varImp(m2, scale = FALSE) %>% arrange(desc(Overall))
+# Drop common name.
 
 m3 <- glm(
   didMove ~
-    commonName +
+    # commonName +
     poly(yday2, 2) +
     OriginCluster +
     wind_killed +
     decimalLatitude +
-    #commonName:poly(yday2, 2) +
+    # commonName:poly(yday2, 2) +
     commonName:OriginCluster +
     commonName:wind_killed +
-    #commonName:decimalLatitude +
+    commonName:decimalLatitude +
     poly(yday2, 2):OriginCluster #+
-  #commonName:poly(yday2, 2):OriginCluster
+  # commonName:poly(yday2, 2):OriginCluster
   ,
   data = mdf,
   na.action = "na.fail",
@@ -116,151 +131,131 @@ m3 <- glm(
 )
 
 d3 <- MuMIn::dredge(m3)
-d3 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(m3)
+d3 %>% topDredgeModelPredictors
+# Stable again.
+dropVIF(car::vif(m3))
+
+# Lookin good!
+summary(m3)
+plot(m3)
+
 
 list(
-  "commonName",
   "yday2"                          ,
   "OriginCluster"                  ,
   "wind_killed"                    ,
-  "decimalLatitude",
-  c("OriginCluster", "commonName"),
-  c("wind_killed", "commonName"),
-  c("yday2", "OriginCluster")
+  "decimalLatitude"                ,
+  c("commonName", "OriginCluster") ,
+  c("wind_killed", "commonName") ,
+  c("decimalLatitude", "commonName") ,
+  c("yday2", "OriginCluster" )
 ) %>%
   lapply(., function(x) {
-    sjPlot::plot_model(m3, type = "pred", terms = x)
+    sjPlot::plot_model(m3, type = "pred", terms = x) + theme_bw()
   } ) -> modPlots1
-grid.arrange(grobs = modPlots1)
+gridExtra::grid.arrange(grobs = modPlots1)
 
-#### Part 2. #####
-# For bats that *did* move, what predicted how far they would move?
-mdf2 <- filter(mdf, didMove == 1)
+## Model B -- how far? ----
 
-mdf2$dist_km %>% hist
+mdf2 <- mdf %>% filter(didMove == 1)
 
-r1 <- glm(
-  dist_km ~
-    commonName +
-    poly(yday2, 2) +
-    OriginCluster +
-    wind_killed +
-    decimalLatitude +
-    commonName:poly(yday2, 2) +
-    commonName:OriginCluster +
-    commonName:wind_killed +
-    commonName:decimalLatitude +
-    poly(yday2, 2):OriginCluster +
-    commonName:poly(yday2, 2):OriginCluster
-  ,
-  data = mdf2,
-  family = Gamma
-)
-e1 <- MuMIn::dredge(r1)
-e1 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(r1)
-r1$coefficients
+gl1 <-
+  glm(
+    dist_km ~
+      commonName +
+      poly(yday2, 2) +
+      OriginCluster +
+      wind_killed +
+      decimalLatitude +
+      commonName:poly(yday2, 2) +
+      commonName:OriginCluster +
+      commonName:wind_killed +
+      commonName:decimalLatitude +
+      poly(yday2, 2):OriginCluster +
+      commonName:poly(yday2, 2):OriginCluster
+    ,
+    data = mdf2,
+    na.action = "na.fail",
+    family = Gamma(link = "log")
+  )
+dgl1 <- MuMIn::dredge(gl1, beta = "none")
+d1 %>% topDredgeModelPredictors
 
-r2 <- glm(
-  dist_km ~
-    commonName +
-    poly(yday2, 2) +
-    OriginCluster +
-    wind_killed +
-    decimalLatitude +
-    commonName:poly(yday2, 2) +
-    commonName:OriginCluster +
-    commonName:wind_killed +
-    #commonName:decimalLatitude +
-    poly(yday2, 2):OriginCluster +
-    commonName:poly(yday2, 2):OriginCluster
-  ,
-  data = mdf2,
-  family = Gamma
-)
-e2 <- MuMIn::dredge(r2)
-e2 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(r2)
-r2$coefficients
+gl2 <-
+  glm(
+    dist_km ~
+      commonName +
+      poly(yday2, 2) +
+      OriginCluster +
+      wind_killed +
+      decimalLatitude +
+      #commonName:poly(yday2, 2) +
+      commonName:OriginCluster +
+      commonName:wind_killed +
+      commonName:decimalLatitude +
+      poly(yday2, 2):OriginCluster# +
+    #commonName:poly(yday2, 2):OriginCluster
+    ,
+    data = mdf2,
+    na.action = "na.fail",
+    family = Gamma(link = "log")
+  )
+dgl2 <- MuMIn::dredge(gl2, beta = "none")
+d2 %>% topDredgeModelPredictors
 
-r3 <- glm(
-  dist_km ~
-    #commonName +
-    poly(yday2, 2) +
-    OriginCluster +
-    wind_killed +
-    decimalLatitude +
-    commonName:poly(yday2, 2) +
-    commonName:OriginCluster +
-    commonName:wind_killed +
-    #commonName:decimalLatitude +
-    poly(yday2, 2):OriginCluster +
-    commonName:poly(yday2, 2):OriginCluster
-  ,
-  data = mdf2,
-  family = Gamma
-)
-e3 <- MuMIn::dredge(r3)
-e3 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(r3)
-r3$coefficients
+# Stable model.
+dropVIF(car::vif(gl2))
+varImp(gl2, scale = FALSE) %>% arrange(desc(Overall))
+# Drop common name.
 
-r4 <- glm(
-  dist_km ~
-    #commonName +
-    poly(yday2, 2) +
-    OriginCluster +
-    wind_killed +
-    decimalLatitude +
-    commonName:poly(yday2, 2) +
-    commonName:OriginCluster +
-    commonName:wind_killed +
-    #commonName:decimalLatitude +
-    #poly(yday2, 2):OriginCluster +
-    commonName:poly(yday2, 2):OriginCluster
-  ,
-  data = mdf2,
-  family = Gamma
-)
-e4 <- MuMIn::dredge(r4)
-e4 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(r4)
-#commonName, yday2, commonName:OriginCluster, or poly(yday2, 2):OriginCluster
-r4$coefficients
+gl3 <-
+  glm(
+    dist_km ~
+      #commonName +
+      poly(yday2, 2) +
+      OriginCluster +
+      wind_killed +
+      decimalLatitude +
+      #commonName:poly(yday2, 2) +
+      commonName:OriginCluster +
+      commonName:wind_killed +
+      commonName:decimalLatitude +
+      poly(yday2, 2):OriginCluster# +
+    #commonName:poly(yday2, 2):OriginCluster
+    ,
+    data = mdf2,
+    na.action = "na.fail",
+    family = Gamma(link = "log")
+  )
+dgl3 <- MuMIn::dredge(gl3, beta = "none")
+d3 %>% topDredgeModelPredictors
 
-r5 <- glm(
-  dist_km ~
-    #commonName +
-    #poly(yday2, 2) +
-    OriginCluster +
-    wind_killed +
-    decimalLatitude +
-    commonName:poly(yday2, 2) +
-    commonName:OriginCluster +
-    commonName:wind_killed +
-    #commonName:decimalLatitude +
-    #poly(yday2, 2):OriginCluster +
-    commonName:poly(yday2, 2):OriginCluster
-  ,
-  data = mdf2,
-  family = Gamma
-)
-e5 <- MuMIn::dredge(r5)
-e5 %>% filter(delta < 2) %>% arrange(df) %>% slice(1) %>% View
-car::vif(r5)
+dropVIF(car::vif(gl3))
+car::vif(gl3)
+# A stable model! Woo!!
+
+plot(gl3)
+summary(gl3)
+
+
 
 list(
+  "yday2"                          ,
   "OriginCluster"                  ,
   "wind_killed"                    ,
-  "decimalLatitude",
-  c("yday2", "commonName"),
-  c("OriginCluster", "commonName"),
-  c("wind_killed", "commonName"),
-  c("yday2", "OriginCluster")
+  "decimalLatitude"                ,
+  c("commonName", "OriginCluster") ,
+  c("wind_killed", "commonName") ,
+  c("decimalLatitude", "commonName") ,
+  c("yday2", "OriginCluster" )
 ) %>%
   lapply(., function(x) {
-    sjPlot::plot_model(r5, type = "pred", terms = x) + ylim(0,750)
+    sjPlot::plot_model(gl3, type = "pred", terms = x) + theme_bw()
   } ) -> modPlots2
-grid.arrange(grobs = modPlots2)
+gridExtra::grid.arrange(grobs = modPlots2)
 
+grid.arrange(
+  arrangeGrob( grobs = modPlots1, ncol = 1 ),
+  arrangeGrob( grobs = modPlots2, ncol = 1 ),
+  ncol = 2
+)
