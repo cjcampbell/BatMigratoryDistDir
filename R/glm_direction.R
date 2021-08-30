@@ -117,27 +117,51 @@ rug_df <- mdf %>%
   dplyr::rename(Species = commonName) %>%
   mutate(Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired")))
 
+# Crop plotted projection to within a certain window of any observations.
+windowToPlot <- 30
+## By species and direction:
+rug_df %>% filter(dir != "U") %>%
+  group_by(Species, dir) %>%
+  dplyr::summarise(min = min(yDay), max= max(yDay)) %>%
+  ungroup %>%
+  mutate(start = min - windowToPlot, end = max + windowToPlot) %>%
+  rename(mod = dir) %>%
+  dplyr::select(Species, mod, start, end) %>%
+  right_join(df_wide, by = c("Species", "mod")) %>%
+  dplyr::filter(yDay >= start & yDay <= end) ->
+  df_wide_filtered
+## By species only:
+rug_df %>% filter(dir != "U") %>%
+  group_by(Species) %>%
+  dplyr::summarise(min = min(yDay), max= max(yDay)) %>%
+  ungroup %>%
+  mutate(start = min - windowToPlot, end = max + windowToPlot) %>%
+  dplyr::select(Species, start, end) %>%
+  right_join(df_wide, by = c("Species")) %>%
+  dplyr::filter(yDay >= start & yDay <= end) ->
+  df_wide_filtered
+
 
 myPlot <- ggplot() +
   # Plot CI's
   geom_ribbon(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, ymin = conf.low, ymax = conf.high, fill = mod, group = interaction(Species, mod)),
     alpha = 0.1
     ) +
   geom_path(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, y = conf.low, color = mod, group = interaction(Species, mod) ),
     linetype = 2
     ) +
   geom_path(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, y = conf.high, color = mod, group = interaction(Species, mod) ),
     linetype = 2
     ) +
   # Plot model predictions.
   geom_path(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, y = predicted, color = mod, group = interaction(Species, mod) ),
     linetype = 1
     ) +
@@ -202,7 +226,7 @@ ggsave(myPlot_labs, filename = file.path(wd$figs, "directionOfMovementByYday.png
 # What about only for movers ----------------------------------------------
 
 
-mdf2 <-mdf %>% filter(dist_km > 100)
+mdf2 <- mdf %>% filter(dist_km >= 100)
 
 # southerly model
 m_S <- glm(
