@@ -1,4 +1,5 @@
-## ----setup --------------------------------------------------------
+
+# Setup -------------------------------------------------------------------
 
 library(tidyverse)
 library(sf)
@@ -12,7 +13,9 @@ theme_set(ggpubr::theme_pubclean())
 options(na.action = "na.fail")
 
 
-## ----CountData-------------------------------------------------------------------
+
+# Exploratory plots -------------------------------------------------------
+
 mydata_minDistDir %>%
   filter(!is.na(Month)) %>%
   group_by(Species, Month, dir) %>%
@@ -49,6 +52,10 @@ mydata_minDistDir %>%
   facet_grid(~Species) +
   theme_bw()
 
+
+# Fit models --------------------------------------------------------------
+
+## For all indivs ----
 
 # Even given increased sampling intensity, how do I predict which times of year correspond to increased activity in south-to-north movements?
 mdf <- mydata_minDistDir %>%
@@ -100,7 +107,7 @@ sjPlot::plot_model(m_N, "pred", terms = c("yDay"))
 pN <-sjPlot::plot_model(m_N, "pred", terms = c("yDay","commonName"))
 pN
 
-## ----combinePreds----------------------------------------------------------------
+### Combine preds -----
 
 col_N <- "#e76f51"
 col_S <- "#023047"
@@ -223,7 +230,7 @@ ggsave(myPlot_labs, filename = file.path(wd$figs, "directionOfMovementByYday.png
 
 
 
-# What about only for movers ----------------------------------------------
+## for only movers -----
 
 
 mdf2 <- mdf %>% filter(dist_km >= 100)
@@ -290,27 +297,40 @@ rug_df <- mdf2 %>%
   dplyr::rename(Species = commonName) %>%
   mutate(Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired")))
 
+# Crop plotted projection to within a certain window of any observations.
+windowToPlot <- 30
+## By species and direction:
+rug_df %>% filter(dir != "U") %>%
+  group_by(Species, dir) %>%
+  dplyr::summarise(min = min(yDay), max= max(yDay)) %>%
+  ungroup %>%
+  mutate(start = min - windowToPlot, end = max + windowToPlot) %>%
+  rename(mod = dir) %>%
+  dplyr::select(Species, mod, start, end) %>%
+  right_join(df_wide, by = c("Species", "mod")) %>%
+  dplyr::filter(yDay >= start & yDay <= end) ->
+  df_wide_filtered
 
 myPlot <- ggplot() +
   # Plot CI's
   geom_ribbon(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, ymin = conf.low, ymax = conf.high, fill = mod, group = interaction(Species, mod)),
     alpha = 0.1
   ) +
   geom_path(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, y = conf.low, color = mod, group = interaction(Species, mod) ),
     linetype = 2
   ) +
   geom_path(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, y = conf.high, color = mod, group = interaction(Species, mod) ),
     linetype = 2
   ) +
   # Plot model predictions.
   geom_path(
-    data = df_wide,
+    data = df_wide_filtered,
     aes(x=yDay, y = predicted, color = mod, group = interaction(Species, mod) ),
     linetype = 1
   ) +
