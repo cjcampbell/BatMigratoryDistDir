@@ -3,6 +3,7 @@ library(tidyverse)
 library(lme4)
 library(lmerTest)
 library(sjPlot)
+library(caret)
 
 mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") )
 
@@ -97,13 +98,30 @@ car::vif(m_sex2)
 # Top model!
 
 ## Model performance. ----
-
+summary(m_sex2)
 gtsummary::tbl_regression(m_sex2) %>%
   add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
 performance::r2(m_sex2)
-
+anova(m_sex2)
+caret::varImp(m_sex2) %>% arrange(desc(Overall))
 
 # Plot results ------------------------------------------------------------
+
+## All responses ---
+
+list(
+  "commonName" ,
+  "OriginCluster"   ,
+  "wind_killed"                    ,
+  c("OriginCluster","commonName")
+) %>%
+  lapply(., function(x) {
+    sjPlot::plot_model(m_sex2, type = "pred", terms = x)
+  } ) %>%
+  {gridExtra::grid.arrange(grobs = .)}
+
+
+## Main plot ----
 
 (ggplot_build(myPlot_sex)$plot$data %>%
   as.data.frame %>%
