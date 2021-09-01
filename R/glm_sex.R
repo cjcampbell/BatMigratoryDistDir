@@ -96,52 +96,14 @@ topDredgeModelPredictors(d_sex2)
 car::vif(m_sex2)
 # Top model!
 
+## Model performance. ----
 
-#tab_model(m_sex)
-m_sum <- summary(d_sex2)
-m_sum$coefficients %>%
-  as.data.frame %>%
-  mutate(sig = if_else(`Pr(>|z|)` <= 0.05, "*", "")) %>%
-  mutate_if(is.numeric, signif, digits = 2) %>%
-  knitr::kable()
+gtsummary::tbl_regression(m_sex2) %>%
+  add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+performance::r2(m_sex2)
 
 
-list(
-  "commonName"                     ,
-  "OriginCluster"                  ,
-  "wind_killed"                    ,
-  c("OriginCluster", "commonName")
-) %>%
-  lapply(., function(x) {
-    sjPlot::plot_model(m_sex2, type = "pred", terms = x) + theme_bw()
-  } ) -> sexPlots
-gridExtra::grid.arrange(grobs = sexPlots)
-
-pp <- sjPlot::plot_model(m_sex, type = "pred", terms = c("OriginCluster", "wind_killed", "commonName"))
-
-(myPlot_sex <- pp +
-  ggpubr::theme_pubr() +
-    scale_color_manual(
-      breaks = c("yes", "no"),
-      values = c("#e76f51", "#2a9d8f")
-    ) +
-    scale_fill_manual(
-      breaks = c("yes", "no"),
-      values = c("#e76f51", "#2a9d8f")
-    ) +
-  geom_hline(yintercept = 0.5, linetype = 2) +
-  ylab("Likelihood of individual identified as female") +
-  ggtitle("Predicted probability of sex:female") +
-  theme(
-    legend.position = "right"
-  )
-  )
-
-ggsave(myPlot_sex, filename = file.path(wd$figs, "model_sex_ouput.png"))
-
-
-
-# New plot ----------------------------------------------------------------
+# Plot results ------------------------------------------------------------
 
 (ggplot_build(myPlot_sex)$plot$data %>%
   as.data.frame %>%
