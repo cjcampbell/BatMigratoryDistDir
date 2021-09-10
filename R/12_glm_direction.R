@@ -103,6 +103,18 @@ sjPlot::plot_model(m_S2, "pred", terms = c("yDay"))
 sjPlot::plot_model(m_S2, "pred", terms = c("wind_killed"))
 sjPlot::plot_model(m_S2, "pred", terms = c("yDay", "commonName"))
 
+
+### southern Model performance. ----
+summary(m_S2)
+gtsummary::tbl_regression(m_S2, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+performance::r2(m_S2)
+anova(m_S2)
+caret::varImp(m_S2) %>% arrange(desc(Overall))
+
+
+
+
+
 ## northerly model ----
 m_N1 <- glm(
   is_northerly ~
@@ -136,6 +148,16 @@ sjPlot::plot_model(m_N2, "pred", terms = c("yDay", "commonName"))
 
 pN <-sjPlot::plot_model(m_N2, "pred", terms = c("yDay","commonName"))
 pN
+
+
+### Northern Model performance. ----
+summary(m_N2)
+gtsummary::tbl_regression(m_N2, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+performance::r2(m_N2)
+anova(m_N2)
+caret::varImp(m_N2) %>% arrange(desc(Overall))
+
+
 
 # Combine preds -----
 
