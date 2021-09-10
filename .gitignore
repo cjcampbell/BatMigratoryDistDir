@@ -10,13 +10,11 @@ bin/*
 data/66098_caitjcampbell_JJA_NoAm_Map_1980_2009/*
 !data/66098_caitjcampbell_JJA_NoAm_Map_1980_2009/*/*predkrig.tiff$
 !data/66098_caitjcampbell_JJA_NoAm_Map_1980_2009/*/*stdkrig.tiff$
-
 data/66100_caitjcampbell_Annual_NoAm_Map_H_1980_2010/*
 !data/66100_caitjcampbell_Annual_NoAm_Map_H_1980_2010/*/*predkrig.tiff$
 !data/66100_caitjcampbell_Annual_NoAm_Map_H_1980_2010/*/*stdkrig.tiff$
-
 data/iucn*
 data/assignR*
 data/*
-
 figs/*
+R_testing
