@@ -72,42 +72,72 @@ mdf <- mydata_minDistDir %>%
     is_dir       = if_else(dir != "U", 1, 0)
   )
 
-# southerly model
-m_S <- glm(
+## southerly model ----
+m_S1 <- glm(
   is_southerly ~
     commonName +
-    poly(yDay,2) +
+    poly(yday2, 2) +
+    wind_killed +
     commonName:poly(yDay,2),
   data = mdf,
   family = "binomial"
 )
 
-sjPlot::plot_model(m_S, "pred", terms = c("commonName"))
-sjPlot::plot_model(m_S, "pred", terms = c("yDay"))
-pS <- sjPlot::plot_model(m_S, "pred", terms = c("yDay","commonName"))
-pS
 
-# northerly model
-m_N <- glm(
+d_S1 <- MuMIn::dredge(m_S1, beta = "none")
+d_S1 %>% topDredgeModelPredictors
+m_S2 <- glm(
+  is_southerly ~
+    commonName +
+    wind_killed +
+    commonName:poly(yDay,2),
+  data = mdf,
+  family = "binomial"
+)
+d_S2 <- MuMIn::dredge(m_S2, beta = "none")
+d_S2 %>% topDredgeModelPredictors
+dropVIF(car::vif(m_S2))
+
+sjPlot::plot_model(m_S2, "pred", terms = c("commonName"))
+sjPlot::plot_model(m_S2, "pred", terms = c("yDay"))
+sjPlot::plot_model(m_S2, "pred", terms = c("wind_killed"))
+sjPlot::plot_model(m_S2, "pred", terms = c("yDay", "commonName"))
+
+## northerly model ----
+m_N1 <- glm(
   is_northerly ~
     commonName +
-    poly( yDay,2) +
+    poly(yday2, 2) +
+    wind_killed +
     commonName:poly(yDay,2),
   data = mdf,
   family = "binomial"
 )
-summary(m_N)
-car::vif(m_N)
-d_N1 <- dredge(m_N)
 
-sjPlot::plot_model(m_N, "pred", terms = c("commonName"))
-sjPlot::plot_model(m_N, "pred", terms = c("yDay"))
-#sjPlot::plot_model(m_N, "pred", terms = c("decimalLatitude"))
-#sjPlot::plot_model(m_N, "pred", terms = c("OriginCluster"))
-pN <-sjPlot::plot_model(m_N, "pred", terms = c("yDay","commonName"))
+d_N1 <- MuMIn::dredge(m_N1, beta = "none")
+d_N1 %>% topDredgeModelPredictors
+m_N2 <- glm(
+  is_northerly ~
+    commonName +
+    poly(yday2, 2) +
+    commonName:poly(yDay,2),
+  data = mdf,
+  family = "binomial"
+)
+d_N2 <- MuMIn::dredge(m_N2, beta = "none")
+d_N2 %>% topDredgeModelPredictors
+dropVIF(car::vif(m_N2))
+
+
+sjPlot::plot_model(m_N2, "pred", terms = c("commonName"))
+sjPlot::plot_model(m_N2, "pred", terms = c("yDay"))
+sjPlot::plot_model(m_N2, "pred", terms = c("yDay", "commonName"))
+
+
+pN <-sjPlot::plot_model(m_N2, "pred", terms = c("yDay","commonName"))
 pN
 
-### Combine preds -----
+# Combine preds -----
 
 col_N <- "#e76f51"
 col_S <- "#023047"
@@ -147,6 +177,10 @@ rug_df %>% filter(dir != "U") %>%
   right_join(df_wide, by = c("Species")) %>%
   dplyr::filter(yDay >= start & yDay <= end) ->
   df_wide_filtered
+
+
+# Plot --------------------------------------------------------------------
+
 
 
 myPlot <- ggplot() +
