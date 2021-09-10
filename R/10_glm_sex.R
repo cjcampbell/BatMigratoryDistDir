@@ -97,6 +97,8 @@ topDredgeModelPredictors(d_sex2)
 car::vif(m_sex2)
 # Top model!
 
+sjPlot::plot_model(m_sex2)
+
 ## Model performance. ----
 summary(m_sex2)
 gtsummary::tbl_regression(m_sex2) %>%
@@ -120,6 +122,8 @@ list(
   } ) %>%
   {gridExtra::grid.arrange(grobs = .)}
 
+
+myPlot_sex <- sjPlot::plot_model(m_sex2, type = "pred", terms = c("OriginCluster","wind_killed", "commonName"))
 
 ## Main plot ----
 

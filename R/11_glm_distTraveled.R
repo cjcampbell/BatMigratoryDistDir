@@ -176,6 +176,7 @@ list(
   } ) -> modPlots1
 
 #gridExtra::grid.arrange(grobs = modPlots1)
+plot_model(gl3, sort.est = TRUE)
 
 ## Model performance. ----
 summary(m3)
@@ -183,8 +184,6 @@ gtsummary::tbl_regression(m3, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10,
 performance::r2(m3)
 anova(m3)
 caret::varImp(m3) %>% arrange(desc(Overall))
-
-
 
 
 
@@ -293,6 +292,8 @@ list(
   } ) -> modPlots2
 #gridExtra::grid.arrange(grobs = modPlots2)
 
+plot_model(gl3, sort.est = TRUE)
+
 ## Model performance. ----
 # See https://stats.stackexchange.com/questions/431120/how-to-interpret-parameters-of-glm-output-with-gamma-log-link
 summary(gl3)
@@ -302,6 +303,9 @@ performance::r2(gl3)
 anova(gl3)
 caret::varImp(gl3) %>% arrange(desc(Overall))
 
+## Interaction details. ----
+modPlots2[[6]] -> o
+o$data
 
 
 # Bigplot -----------------------------------------------------------------
@@ -455,7 +459,6 @@ myGrobs <- list(
     theme(plot.margin = margin(1,0,0,0, "cm"))
 
 )
-
 
 
 ## Plot -----
