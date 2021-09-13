@@ -18,21 +18,21 @@ options(na.action = "na.fail")
 topDredgeModelPredictors <- function(dredgeModelOutput) {
   dredgeModelOutput %>%
     # Find top-performing model
-    filter(delta < 2) %>% arrange(df) %>% slice(1) %>% as.data.frame %>%
+    dplyr::filter(delta < 2) %>% arrange(df) %>% slice(1) %>% as.data.frame %>%
     # Pull out predictors.
     dplyr::select(-c("(Intercept)", "df", "AICc", "delta", "weight", "logLik")) %>%
     # Make a df.
     t %>% as.data.frame() ->
     step1
-  print(paste0("Drop: ", row.names(filter(step1, is.na(V1))) ) )
-  print(paste0("Keep: ", row.names(filter(step1, !is.na(V1))) ) )
+  print(paste0("Drop: ", row.names(dplyr::filter(step1, is.na(V1))) ) )
+  print(paste0("Keep: ", row.names(dplyr::filter(step1, !is.na(V1))) ) )
 }
 
 # Quick fun to return params with too-high VIF.
 dropVIF <- function(vifOUT) {
   vifOUT %>%
     as.data.frame %>%
-    filter(`GVIF^(1/(2*Df))` >= 5) %>%
+    dplyr::filter(`GVIF^(1/(2*Df))` >= 5) %>%
     row.names() -> p
   print(paste0("Consider dropping: ", p))
 }
@@ -49,7 +49,7 @@ ggarrange(
       xlab("Movement > 100km observed")
   }, {
     v %>%
-      filter(didMove == "Y") %>%
+      dplyr::filter(didMove == "Y") %>%
       ggplot() +
       aes(dist_km) +
       geom_histogram() +
@@ -61,7 +61,7 @@ ggarrange(
 # Model selection ---------------------------------------------------------
 
 mdf <- mydata_minDistDir %>%
-  filter(
+  dplyr::filter(
     !is.na(dist_km),
     !is.na(OriginCluster),
     !is.na(yDay)
@@ -189,7 +189,7 @@ caret::varImp(m3) %>% arrange(desc(Overall))
 
 ## Model B -- how far? ----
 
-mdf2 <- mdf %>% filter(didMove == 1)
+mdf2 <- mdf %>% dplyr::filter(didMove == 1)
 
 gl1 <-
   glm(
@@ -461,23 +461,6 @@ myGrobs <- list(
 )
 
 
-## Plot -----
-
-# arrangeGrob(
-#   grobs = myGrobs,
-#   layout_matrix = matrix(
-#     data = c(
-#       1,2,
-#       3,4,
-#       5,5,
-#       6,6
-#     ), ncol = 2, nrow = 4, byrow = T
-#   ),
-#   heights = c(1,1,2.5,2.5)
-# ) -> bigP
-#
-# plot(bigP)
-
 arrangeGrob(
   grobs = myGrobs, ncol=1, nrow= 3
 ) -> bigP
@@ -487,3 +470,51 @@ ggsave(bigP, filename = file.path(wd$figs, "distanceModelResults.png"),
        width = 8, height = 11)
 
 
+
+# Refined bigplot ---------------------------------------------------------
+
+
+ggpubr::ggarrange(
+  plotlist = list(
+    # A
+    modPlots1[[1]] + margins + prob_y + dayOfYear_x                        ,
+    # J
+    modPlots2[[5]] + margins + dist_y + OriginClusterColors + species_x    ,
+    # L
+    modPlots2[[8]] + margins + dist_y + OriginClusterColors + dayOfYear_x  ,
+    # M
+    modPlots2[[6]] + margins + dist_y + speciesColors + wind_killed
+  )
+)
+
+
+
+
+
+
+
+  ggpubr::ggarrange(
+    plotlist = list(
+      modPlots1[[5]] + margins + prob_y + OriginClusterColors + species_x,
+      modPlots2[[5]] + margins + dist_y + OriginClusterColors + species_x,
+      modPlots1[[8]] + margins + prob_y + OriginClusterColors + dayOfYear_x,
+      modPlots2[[8]] + margins + dist_y + OriginClusterColors + dayOfYear_x
+    ),
+    ncol = 2, nrow = 2, common.legend = T, legend = legendPosition,
+    labels = c(LETTERS[9:12]), hjust=-0.1, vjust = -1
+  ) +
+    theme(plot.margin = margin(1,0,0,0, "cm")) ,
+
+  ggpubr::ggarrange(
+    plotlist = list(
+      modPlots1[[6]] + margins + prob_y + speciesColors + wind_killed,
+      modPlots2[[6]] + margins + dist_y + speciesColors + wind_killed,
+      modPlots1[[7]] + margins + prob_y + speciesColors + lat,
+      modPlots2[[7]] + margins + dist_y + speciesColors + lat
+    ),
+    ncol = 2, nrow = 2, common.legend = T, legend = legendPosition,
+    labels = c(LETTERS[12:15]), hjust=-0.1, vjust = -1
+  ) +
+    theme(plot.margin = margin(1,0,0,0, "cm"))
+
+)

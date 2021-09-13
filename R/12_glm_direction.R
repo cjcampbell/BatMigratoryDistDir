@@ -17,7 +17,7 @@ options(na.action = "na.fail")
 # Exploratory plots -------------------------------------------------------
 
 mydata_minDistDir %>%
-  filter(!is.na(Month)) %>%
+  dplyr::filter(!is.na(Month)) %>%
   group_by(Species, Month, dir) %>%
   dplyr::summarise(n=n()) %>%
   mutate(p = n/sum(n)) %>%
@@ -35,7 +35,7 @@ mydata_minDistDir %>%
   theme_bw()
 
 mydata_minDistDir %>%
-  filter(!is.na(Month)) %>%
+  dplyr::filter(!is.na(Month)) %>%
   group_by(Species,Month,dir) %>%
   dplyr::summarise(n=n()) %>%
   mutate(prop = n/sum(n)) %>%
@@ -59,7 +59,7 @@ mydata_minDistDir %>%
 
 # Even given increased sampling intensity, how do I predict which times of year correspond to increased activity in south-to-north movements?
 mdf <- mydata_minDistDir %>%
-  filter(
+  dplyr::filter(
     !is.na(dist_km),
     !is.na(OriginCluster),
     !is.na(yDay),
@@ -179,7 +179,8 @@ rug_df <- mdf %>%
 # Crop plotted projection to within a certain window of any observations.
 windowToPlot <- 30
 ## By species and direction:
-rug_df %>% filter(dir != "U") %>%
+dplyr::rug_df %>%
+  dplyr::filter(dir != "U") %>%
   group_by(Species, dir) %>%
   dplyr::summarise(min = min(yDay), max= max(yDay)) %>%
   ungroup %>%
@@ -190,7 +191,8 @@ rug_df %>% filter(dir != "U") %>%
   dplyr::filter(yDay >= start & yDay <= end) ->
   df_wide_filtered
 ## By species only:
-rug_df %>% filter(dir != "U") %>%
+rug_df %>%
+  dplyr::filter(dir != "U") %>%
   group_by(Species) %>%
   dplyr::summarise(min = min(yDay), max= max(yDay)) %>%
   ungroup %>%

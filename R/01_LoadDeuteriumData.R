@@ -162,7 +162,7 @@ if(reload_museum == TRUE){
   }) %>% plyr::ldply()
 
   # Remove entry for which there are no matching records.
-  frdat2 <- frdat2 %>% filter(!is.na(name))
+  frdat2 <- frdat2 %>% dplyr::filter(!is.na(name))
 
   write.csv(frdat2, file = file.path( wd$bin, "Fraserdata-museum.csv") )
 

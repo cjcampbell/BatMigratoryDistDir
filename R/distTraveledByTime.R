@@ -17,12 +17,12 @@ plotBar <- function(df, ymax, title = NULL, xlab = NULL, ...) {
   df <- mutate(df, Month = as.numeric(as.character(Month)))
 
   labs <- df %>%
-  filter(!is.na(dist), !is.na(reference)) %>%
+    dplyr::filter(!is.na(dist), !is.na(reference)) %>%
   dplyr::group_by(Species, Month) %>%
   dplyr::summarise(n=n())
 
   panel_lab <-  df %>%
-  filter(!is.na(dist), !is.na(reference)) %>%
+    dplyr::filter(!is.na(dist), !is.na(reference)) %>%
   dplyr::group_by(Species) %>%
   dplyr::summarise(n=paste0("italic(n)==", n()))
 
@@ -73,9 +73,9 @@ plotBar <- function(df, ymax, title = NULL, xlab = NULL, ...) {
 
 }
 
-p1 <- filter(mydata_minDistDir, !is.na(dist), reference == 1) %>%
+p1 <- dplyr::filter(mydata_minDistDir, !is.na(dist), reference == 1) %>%
   plotBar(ymax=100, title = "Reference Individuals")
-p2 <- filter(mydata_minDistDir, !is.na(dist), reference == 0) %>%
+p2 <- dplyr::filter(mydata_minDistDir, !is.na(dist), reference == 0) %>%
   plotBar(ymax=550, title = "Unknown-origin Individuals", xlab = "Month")
 
 ggpubr::ggarrange(common.legend = T, legend = "bottom", ncol = 1,

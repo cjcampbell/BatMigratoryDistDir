@@ -163,7 +163,7 @@ ave_lat <- lapply(1:nrow(mydata_transformed), function(i){
     full.names = T
   ) %>%
     readRDS() %>%
-    filter(method == "raw")
+    dplyr::filter(method == "raw")
   lats <- base::sample(size = 1000, x = u1$y, replace = TRUE, prob = u1$value)
   mean(lats)
 } ) %>%

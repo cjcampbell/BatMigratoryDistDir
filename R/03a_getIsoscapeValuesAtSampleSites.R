@@ -104,7 +104,7 @@ if(nrow(outaRange) == 0 ) {
     dplyr::mutate_if(is.factor, as.character)
 
   mydata_isoVals <- mydata_isoVals0 %>%
-    filter( !ID %in% outaRange$ID) %>%
+    dplyr::filter( !ID %in% outaRange$ID) %>%
     rbind( mydata_redo ) %>%
     arrange(X) %>% dplyr::select(-X)
 

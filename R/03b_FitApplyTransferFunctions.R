@@ -12,8 +12,8 @@ molt_df <- data.frame(
 
 mydata_isoVals <- readRDS( file.path(wd$bin, "mydata_isoVals.rds") )
 
-mydata.isoVals.highCertainty <- mydata_isoVals %>%  filter(
-  uncertainty<=50e3|is.na(uncertainty) )
+mydata.isoVals.highCertainty <- mydata_isoVals %>%
+  dplyr::filter( uncertainty<=50e3|is.na(uncertainty) )
 saveRDS(mydata.isoVals.highCertainty, file = file.path(wd$bin, "mydata.isoVals.highCertainty.rds"))
 
 mydata <- read.csv( file.path(wd$data, "alldat.csv") )
@@ -225,7 +225,7 @@ if(!exists("mydata.isoVals.highCertainty")) {
 
 residual_sumtab <- lapply(SoI, function(spp){
   targetIndivs <- mydata.isoVals.highCertainty %>%
-    filter(
+    dplyr::filter(
       Species == spp,
       yDay >= as.numeric(sma_selected[ sma_selected$Species == spp , "from"]),
       yDay <= as.numeric(sma_selected[ sma_selected$Species == spp , "to"])

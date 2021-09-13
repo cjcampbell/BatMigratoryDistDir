@@ -88,7 +88,7 @@ mydata_PoOatSampleSite <- probs_at_site_df %>%
 
 knownOrigin_quantVals <- lapply(SoI, function(spp){
   quantvals <- mydata_PoOatSampleSite %>%
-    filter(method == "probVal_quant", Species == spp, MoltStatus == 1) %>%
+    dplyr::filter(method == "probVal_quant", Species == spp, MoltStatus == 1) %>%
     inner_join(referenceIndivs) %>%
     dplyr::select(valAtSampleSite) %>%
     unlist
@@ -245,7 +245,7 @@ mydata_minDistDir <- dplyr::rename(minDistEstimates, ID = layer) %>%
   dplyr::select(ID,value,x,y,ID,dist_km,theta_from_origin,quantOrder,conf_threshold) %>%
   left_join(., mydata_transformed) %>%
   left_join(., mostLikelyDirections) %>%
-  filter(!is.na(Species)) %>%
+  dplyr::filter(!is.na(Species)) %>%
   dplyr::mutate(
     reference = if_else(MoltStatus==1&wind_killed=="no", 1, 0),
     dist = case_when(
@@ -257,7 +257,7 @@ mydata_minDistDir <- dplyr::rename(minDistEstimates, ID = layer) %>%
   ) %>%
   left_join(., mydata_clustered) %>%
   # Tidy.
-  filter(quantOrder == 0.00, conf_threshold == 0.25 ) %>%
+  dplyr::filter(quantOrder == 0.00, conf_threshold == 0.25 ) %>%
   mutate(
     reference = factor(reference),
     dist = factor(dist, levels = rev(c("short", "mid", "long"))),

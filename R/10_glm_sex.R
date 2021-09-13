@@ -12,7 +12,7 @@ coords_in_dd <- readRDS( file.path(wd$bin, "coords_all.rds") ) %>%
   dplyr::select(x,y,y_dd) %>%
   distinct
 latDeets <- mydata_minDistDir %>%
-  filter(quantOrder == 0.05, conf_threshold == 0.25 ) %>%
+  dplyr::filter(quantOrder == 0.05, conf_threshold == 0.25 ) %>%
   dplyr::select(ID, x, y) %>%
   left_join(., coords_in_dd, by = c("x", "y")) %>%
   rename(latOf5thPercentileClosestLikelyPt = y_dd) %>%
@@ -24,7 +24,7 @@ mdf <- mydata_minDistDir
 ## ---- simple count by wind killed y/n figure ---------------------------------
 
 mdf %>%
-  filter(!is.na(Sex)) %>%
+  dplyr::filter(!is.na(Sex)) %>%
   ggplot() +
   aes(x = OriginCluster, fill = Sex) %>%
   geom_bar(stat ="count", position=position_dodge()) +
@@ -36,10 +36,10 @@ mdf %>%
 ## ----proportion female at wind killed y/n figure -----------------------------
 
 mdf %>%
-  filter(!is.na(Sex)) %>%
+  dplyr::filter(!is.na(Sex)) %>%
   group_by(commonName, OriginCluster, wind_killed, Sex) %>% summarise(n=n()) %>%
   group_by(commonName, OriginCluster,wind_killed) %>% mutate(prop = n/sum(n)) %>%
-  filter(Sex == "F") %>%
+  dplyr::filter(Sex == "F") %>%
   ggplot() +
   geom_hline(yintercept=0.5, linetype = 2) +
   aes(x = OriginCluster, y = prop, fill = wind_killed) +
@@ -58,7 +58,7 @@ mdf %>%
 ## ----fit logistic model ------------------------------------------------------
 
 mdf2 <- mdf %>%
-  filter(!is.na(Sex)) %>%
+  dplyr::filter(!is.na(Sex)) %>%
   mutate(sex_01 = case_when(Sex == "F" ~ 1, Sex == "M" ~ 0, TRUE ~ as.numeric(NA)))
 
 # logistic regression to do that.
