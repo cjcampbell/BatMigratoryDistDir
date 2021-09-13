@@ -133,9 +133,7 @@ myPlot_sex <- sjPlot::plot_model(m_sex2, type = "pred", terms = c("OriginCluster
   ggplot() +
   facet_wrap(~Species) +
   geom_hline(yintercept = 0.5, linetype = 1, color = "grey80") +
-  geom_ribbon( aes(x=x, ymin = conf.low, ymax = conf.high, fill = wind_killed), alpha = 0.25 ) +
-  geom_path( aes(x=x, y=conf.low , color = wind_killed) , linetype = 2 ) +
-  geom_path( aes(x=x, y=conf.high, color = wind_killed) , linetype = 2 ) +
+  geom_ribbon( aes(x=x, ymin = conf.low, ymax = conf.high, fill = wind_killed, color = wind_killed), alpha = 0.2, linetype = 1, size = 0.15) +
   geom_path( aes(x=x, y=predicted, color = wind_killed) ) +
   scale_y_continuous(
     "Probability of identification as female",
