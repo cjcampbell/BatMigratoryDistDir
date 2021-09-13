@@ -384,6 +384,22 @@ dist_y <- list(
     plot.title = element_blank()
   )
 )
+
+dist_y_lim <- list(
+  coord_cartesian(
+    ylim = c(100, 600)
+    ),
+  scale_y_continuous(
+    "Min. dist (km)",
+    position = "right",
+    breaks = seq(100,900,by=125),
+    labels = seq(100,900,by=125)
+  ),
+  theme(
+    plot.title = element_blank()
+  )
+)
+
 prob_y <- list(
   scale_y_continuous(
     "Prob. of movement",
@@ -393,6 +409,19 @@ prob_y <- list(
   theme(
     plot.title = element_blank()
   )
+)
+
+prob_y_lim <- list(
+  coord_cartesian(ylim = c(0, 0.8)),
+  scale_y_continuous(
+    "Prob. of movement",
+    position = "left",
+    limits = c(0,1)
+  ),
+  theme(
+    plot.title = element_blank()
+  )
+
 )
 
 legendPosition <- "bottom"
@@ -487,7 +516,8 @@ doy_spp1 <- p1$data %>%
   geom_path(aes(y=predicted), size = 1.5) +
   speciesColors +
   dayOfYear_x +
-  prob_y
+  prob_y_lim +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
 p2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("yday2","commonName"))
 doy_spp2 <- p2$data %>%
   ggplot() +
@@ -496,9 +526,10 @@ doy_spp2 <- p2$data %>%
   geom_path(aes(y=predicted), size = 1.5) +
   speciesColors +
   dayOfYear_x +
-  dist_y
+  dist_y_lim +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
 
-plot_doySpp <- ggpubr::ggarrange( plotlist = list( doy_spp1, doy_spp2 ), common.legend = T )
+# plot_doySpp <- ggpubr::ggarrange( plotlist = list( doy_spp1, doy_spp2 ), common.legend = T )
 
 
 
@@ -510,7 +541,7 @@ lat_orig_spp1 <- sjPlot::plot_model(m3, type = "pred", terms = c("decimalLatitud
       aes(x=x, color = group, fill = group) +
       geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
       geom_path(aes(y=predicted), size = 1.5) +
-      prob_y +
+      prob_y_lim +
       speciesColors +
       lat
   }
@@ -524,21 +555,21 @@ lat_orig_spp2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("decimalLatitu
       aes(x=x, color = group, fill = group) +
       geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
       geom_path(aes(y=predicted), size = 1.5) +
-      dist_y +
+      dist_y_lim +
       speciesColors +
       lat
   }
 
-plot_lat <- ggpubr::ggarrange(
-  plotlist = list( lat_orig_spp1, lat_orig_spp2 ),
-  common.legend = T ,
-  ncol = 2)
+# plot_lat <- ggpubr::ggarrange(
+#   plotlist = list( lat_orig_spp1, lat_orig_spp2 ),
+#   common.legend = T ,
+#   ncol = 2)
 
 
 ## Sampling method ---------------------------------------------------------
 
 # Add sampling method, w respect to species.
-sjPlot::plot_model(m3, type = "pred", terms = c("wind_killed","commonName")) %>%
+p_sam1 <- sjPlot::plot_model(m3, type = "pred", terms = c("wind_killed","commonName")) %>%
   {.$data} %>%
   mutate(
     x_adjusted = case_when(
@@ -548,15 +579,12 @@ sjPlot::plot_model(m3, type = "pred", terms = c("wind_killed","commonName")) %>%
     )
   ) %>%
   ggplot() +
-  aes(x=x_adjusted,y=predicted, color = group) +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.05) +
-  geom_point(size = 3) +
-  geom_path(linetype = 2, size = 0.25) ->
-  o1
-p_sam1 <- o1 +
-  scale_y_continuous(
-    limits = c(0,1)
-  ) +
+  aes(x=x_adjusted,y=predicted) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group, color = group), size = 0.15, alpha = 0.15) +
+  geom_errorbar(aes(color = group, ymin = conf.low, ymax = conf.high), width = 0.05) +
+  geom_point(aes(color = group), size = 3) +
+  #geom_path(linetype = 2, size = 0.25) +
+  coord_cartesian(ylim = c(0,0.75)) +
   speciesColors +
   scale_x_continuous(
     "Sampling method",
@@ -564,9 +592,10 @@ p_sam1 <- o1 +
     labels = c("Live-caught, etc.", "Wind killed"),
     limits = c(0.5,2.5)
   ) +
-  prob_y
+  prob_y_lim
 
-sjPlot::plot_model(gl3, type = "pred", terms = c("wind_killed","commonName")) %>%
+
+p_sam2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("wind_killed","commonName")) %>%
   {.$data} %>%
   mutate(
     x_adjusted = case_when(
@@ -576,13 +605,13 @@ sjPlot::plot_model(gl3, type = "pred", terms = c("wind_killed","commonName")) %>
     )
   ) %>%
   ggplot() +
-  aes(x=x_adjusted,y=predicted, color = group) +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.05) +
-  geom_point(size = 3) +
-  geom_path(linetype = 2, size = 0.25) ->
-  o2
-p_sam2 <- o2 +
-  dist_y +
+  aes(x=x_adjusted,y=predicted) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group, color = group), size = 0.15, alpha = 0.15) +
+  geom_errorbar(aes(color = group, ymin = conf.low, ymax = conf.high), width = 0.05) +
+  geom_point(aes(color = group), size = 3) +
+  #geom_path(linetype = 2, size = 0.25) +
+  coord_cartesian(ylim = c(0,0.75)) +
+  dist_y_lim +
   speciesColors +
   scale_x_continuous(
     "Sampling method",
@@ -591,13 +620,13 @@ p_sam2 <- o2 +
     limits = c(0.5,2.5)
   )
 
-plot_sampling <- ggpubr::ggarrange(
-  plotlist = list(
-    p_sam1,
-    p_sam2
-  ),
-  common.legend = T
-)
+# plot_sampling <- ggpubr::ggarrange(
+#   plotlist = list(
+#     p_sam1,
+#     p_sam2
+#   ),
+#   common.legend = T
+# )
 
 
 ## OriginCluster -----------------------------------------------------------
@@ -608,7 +637,7 @@ clust_1 <- sjPlot::plot_model(m3, type = "pred", terms = c("OriginCluster","comm
       aes(x=x, color = group, fill = group) +
       geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
       geom_path(aes(y=predicted), size = 1.5) +
-      prob_y +
+      prob_y_lim +
       speciesColors +
       scale_x_continuous("OriginCluster")
   }
@@ -621,7 +650,7 @@ clust_2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("OriginCluster","com
       aes(x=x, color = group, fill = group) +
       geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
       geom_path(aes(y=predicted), size = 1.5) +
-      dist_y +
+      dist_y_lim +
       speciesColors +
       scale_x_continuous("OriginCluster")
   }
@@ -648,4 +677,4 @@ clust_2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("OriginCluster","com
 
 
 ggsave(BigPlotBySpecies, filename = file.path(wd$figs, "distanceModelResults.png"),
-       width = 8, height = 11)
+       width = 6, height = 9)
