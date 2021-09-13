@@ -104,6 +104,8 @@ sjPlot::plot_model(m_S2, "pred", terms = c("wind_killed"))
 sjPlot::plot_model(m_S2, "pred", terms = c("yDay", "commonName"))
 
 
+pS <-sjPlot::plot_model(m_S2, "pred", terms = c("yDay","commonName"))
+
 ### southern Model performance. ----
 summary(m_S2)
 gtsummary::tbl_regression(m_S2, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
@@ -179,7 +181,7 @@ rug_df <- mdf %>%
 # Crop plotted projection to within a certain window of any observations.
 windowToPlot <- 30
 ## By species and direction:
-dplyr::rug_df %>%
+rug_df %>%
   dplyr::filter(dir != "U") %>%
   group_by(Species, dir) %>%
   dplyr::summarise(min = min(yDay), max= max(yDay)) %>%
@@ -211,19 +213,20 @@ myPlot <- ggplot() +
   # Plot CI's
   geom_ribbon(
     data = df_wide_filtered,
-    aes(x=yDay, ymin = conf.low, ymax = conf.high, fill = mod, group = interaction(Species, mod)),
-    alpha = 0.1
+    aes(x=yDay, ymin = conf.low, ymax = conf.high, fill = mod, color = mod,
+        group = interaction(Species, mod)),
+    alpha =0.1, linetype = 1, size = 0.15
   ) +
-  geom_path(
-    data = df_wide_filtered,
-    aes(x=yDay, y = conf.low, color = mod, group = interaction(Species, mod) ),
-    linetype = 2
-  ) +
-  geom_path(
-    data = df_wide_filtered,
-    aes(x=yDay, y = conf.high, color = mod, group = interaction(Species, mod) ),
-    linetype = 2
-  ) +
+  # geom_path(
+  #   data = df_wide_filtered,
+  #   aes(x=yDay, y = conf.low, color = mod, group = interaction(Species, mod) ),
+  #   linetype = 2
+  # ) +
+  # geom_path(
+  #   data = df_wide_filtered,
+  #   aes(x=yDay, y = conf.high, color = mod, group = interaction(Species, mod) ),
+  #   linetype = 2
+  # ) +
   # Plot model predictions.
   geom_path(
     data = df_wide_filtered,
