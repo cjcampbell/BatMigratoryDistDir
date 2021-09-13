@@ -308,7 +308,7 @@ modPlots2[[6]] -> o
 o$data
 
 
-# Bigplot -----------------------------------------------------------------
+# Setup for plotting ------------------------------------------------------
 ## Setup axes. ----
 library(ggpubr)
 
@@ -379,7 +379,7 @@ dist_y <- list(
     position = "right",
     breaks = seq(0,750,by=150),
     labels = seq(0,750,by=150)
-    ),
+  ),
   theme(
     plot.title = element_blank()
   )
@@ -387,7 +387,8 @@ dist_y <- list(
 prob_y <- list(
   scale_y_continuous(
     "Prob. of movement",
-    position = "left"
+    position = "left",
+    limits = c(0,1)
   ),
   theme(
     plot.title = element_blank()
@@ -395,6 +396,9 @@ prob_y <- list(
 )
 
 legendPosition <- "bottom"
+
+
+# Plot each significant predictor -----------------------------------------------------------------
 
 ## Arrange -----
 myGrobs <- list(
@@ -466,55 +470,182 @@ arrangeGrob(
 ) -> bigP
 
 ## Save ----
-ggsave(bigP, filename = file.path(wd$figs, "distanceModelResults.png"),
+ggsave(bigP, filename = file.path(wd$figs, "SI_allDistanceModelResults.png"),
        width = 8, height = 11)
 
 
 
-# Refined bigplot ---------------------------------------------------------
+# Figure 3 Selected interactions---------------------------------------------------------
+
+## Effect of doy -----------------------------------------------------------
+
+p1 <- sjPlot::plot_model(m3, type = "pred", terms = c("yday2","commonName"))
+doy_spp1 <- p1$data %>%
+  ggplot() +
+  aes(x=x, color = group, fill = group) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
+  geom_path(aes(y=predicted), size = 1.5) +
+  speciesColors +
+  dayOfYear_x +
+  prob_y
+p2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("yday2","commonName"))
+doy_spp2 <- p2$data %>%
+  ggplot() +
+  aes(x=x, color = group, fill = group) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
+  geom_path(aes(y=predicted), size = 1.5) +
+  speciesColors +
+  dayOfYear_x +
+  dist_y
+
+plot_doySpp <- ggpubr::ggarrange( plotlist = list( doy_spp1, doy_spp2 ), common.legend = T )
 
 
-ggpubr::ggarrange(
-  plotlist = list(
-    # A
-    modPlots1[[1]] + margins + prob_y + dayOfYear_x                        ,
-    # J
-    modPlots2[[5]] + margins + dist_y + OriginClusterColors + species_x    ,
-    # L
-    modPlots2[[8]] + margins + dist_y + OriginClusterColors + dayOfYear_x  ,
-    # M
-    modPlots2[[6]] + margins + dist_y + speciesColors + wind_killed
+
+## lat -----------------------------------------------------------
+lat_orig_spp1 <- sjPlot::plot_model(m3, type = "pred", terms = c("decimalLatitude","commonName")) %>%
+  {
+    .$data %>%
+      ggplot() +
+      aes(x=x, color = group, fill = group) +
+      geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
+      geom_path(aes(y=predicted), size = 1.5) +
+      prob_y +
+      speciesColors +
+      lat
+  }
+
+
+# So step 2 is contingent on IF movement is detected! So we can only ever bottom out IF
+lat_orig_spp2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("decimalLatitude","commonName")) %>%
+  {
+    .$data %>%
+      ggplot() +
+      aes(x=x, color = group, fill = group) +
+      geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
+      geom_path(aes(y=predicted), size = 1.5) +
+      dist_y +
+      speciesColors +
+      lat
+  }
+
+plot_lat <- ggpubr::ggarrange(
+  plotlist = list( lat_orig_spp1, lat_orig_spp2 ),
+  common.legend = T ,
+  ncol = 2)
+
+
+## Sampling method ---------------------------------------------------------
+
+# Add sampling method, w respect to species.
+sjPlot::plot_model(m3, type = "pred", terms = c("wind_killed","commonName")) %>%
+  {.$data} %>%
+  mutate(
+    x_adjusted = case_when(
+      group == "Hoary" ~ x-0.05,
+      group == "Silver-haired" ~ x + 0.05,
+      TRUE ~ x
+    )
+  ) %>%
+  ggplot() +
+  aes(x=x_adjusted,y=predicted, color = group) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.05) +
+  geom_point(size = 3) +
+  geom_path(linetype = 2, size = 0.25) ->
+  o1
+p_sam1 <- o1 +
+  scale_y_continuous(
+    limits = c(0,1)
+  ) +
+  speciesColors +
+  scale_x_continuous(
+    "Sampling method",
+    breaks = c(1,2),
+    labels = c("Live-caught, etc.", "Wind killed"),
+    limits = c(0.5,2.5)
+  ) +
+  prob_y
+
+sjPlot::plot_model(gl3, type = "pred", terms = c("wind_killed","commonName")) %>%
+  {.$data} %>%
+  mutate(
+    x_adjusted = case_when(
+      group == "Hoary" ~ x-0.05,
+      group == "Silver-haired" ~ x + 0.05,
+      TRUE ~ x
+    )
+  ) %>%
+  ggplot() +
+  aes(x=x_adjusted,y=predicted, color = group) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.05) +
+  geom_point(size = 3) +
+  geom_path(linetype = 2, size = 0.25) ->
+  o2
+p_sam2 <- o2 +
+  dist_y +
+  speciesColors +
+  scale_x_continuous(
+    "Sampling method",
+    breaks = c(1,2),
+    labels = c("Live-caught, etc.", "Wind killed"),
+    limits = c(0.5,2.5)
   )
+
+plot_sampling <- ggpubr::ggarrange(
+  plotlist = list(
+    p_sam1,
+    p_sam2
+  ),
+  common.legend = T
 )
 
 
+## OriginCluster -----------------------------------------------------------
+clust_1 <- sjPlot::plot_model(m3, type = "pred", terms = c("OriginCluster","commonName")) %>%
+  {
+    .$data %>%
+      ggplot() +
+      aes(x=x, color = group, fill = group) +
+      geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
+      geom_path(aes(y=predicted), size = 1.5) +
+      prob_y +
+      speciesColors +
+      scale_x_continuous("OriginCluster")
+  }
+
+
+clust_2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("OriginCluster","commonName")) %>%
+  {
+    .$data %>%
+      ggplot() +
+      aes(x=x, color = group, fill = group) +
+      geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha =0.1, linetype = 1, size = 0.15) +
+      geom_path(aes(y=predicted), size = 1.5) +
+      dist_y +
+      speciesColors +
+      scale_x_continuous("OriginCluster")
+  }
 
 
 
+## Combine -----------------------------------------------------------------
 
-
-  ggpubr::ggarrange(
-    plotlist = list(
-      modPlots1[[5]] + margins + prob_y + OriginClusterColors + species_x,
-      modPlots2[[5]] + margins + dist_y + OriginClusterColors + species_x,
-      modPlots1[[8]] + margins + prob_y + OriginClusterColors + dayOfYear_x,
-      modPlots2[[8]] + margins + dist_y + OriginClusterColors + dayOfYear_x
-    ),
-    ncol = 2, nrow = 2, common.legend = T, legend = legendPosition,
-    labels = c(LETTERS[9:12]), hjust=-0.1, vjust = -1
-  ) +
-    theme(plot.margin = margin(1,0,0,0, "cm")) ,
-
-  ggpubr::ggarrange(
-    plotlist = list(
-      modPlots1[[6]] + margins + prob_y + speciesColors + wind_killed,
-      modPlots2[[6]] + margins + dist_y + speciesColors + wind_killed,
-      modPlots1[[7]] + margins + prob_y + speciesColors + lat,
-      modPlots2[[7]] + margins + dist_y + speciesColors + lat
-    ),
-    ncol = 2, nrow = 2, common.legend = T, legend = legendPosition,
-    labels = c(LETTERS[12:15]), hjust=-0.1, vjust = -1
-  ) +
+(
+  BigPlotBySpecies <-
+    ggpubr::ggarrange(
+      plotlist = list(
+        doy_spp1, doy_spp2 ,
+        p_sam1, p_sam2,
+        lat_orig_spp1, lat_orig_spp2,
+        clust_1, clust_2
+      ),
+      common.legend = T, labels = c(LETTERS[1:8]),
+      legend = legendPosition, hjust=-0.1, vjust = -0.7,
+      ncol = 2, nrow = 4
+      ) +
     theme(plot.margin = margin(1,0,0,0, "cm"))
-
 )
+
+
+ggsave(BigPlotBySpecies, filename = file.path(wd$figs, "distanceModelResults.png"),
+       width = 8, height = 11)
