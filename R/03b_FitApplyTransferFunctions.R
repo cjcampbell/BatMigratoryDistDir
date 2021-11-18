@@ -264,14 +264,6 @@ mydata_transformed <- mydata %>%
     dDprecip =  (d2H - mean_intercept) / mean_slope,
     MoltStatus = if_else(is.na(yDay), as.numeric(NA),
                          if_else( yDay >= from & yDay <= to, 1, 0 ) ),
-    molt_status =
-      if_else( from <= yDay & to >= yDay, "Summering",
-               if_else( yDay > (to + migration_interval) | yDay < (from - migration_interval),
-                        "Migrated", "Migrating" ) ),
-    days_since_molt_period =
-      if_else( yDay > to, yDay - to,
-               if_else( yDay < from , (365 - to) + yDay,
-                        as.numeric(0)) ),
     wind_killed = as.factor( if_else(sampling_method %in% c("TURBINE_CARCASS", "turbine_carcass"), "yes", "no" ) )
   )
 

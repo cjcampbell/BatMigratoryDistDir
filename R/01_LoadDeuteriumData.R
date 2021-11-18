@@ -451,5 +451,5 @@ mydata <- alldat %>%
 
 # Save --------------------------------------------------------------------
 
-write.csv(mydata, file = file.path(wd$data, "alldat.csv"))
+write.csv(mydata, file = file.path(wd$data, "alldat.csv"), row.names = F)
 
