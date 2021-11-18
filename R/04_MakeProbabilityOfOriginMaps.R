@@ -10,26 +10,29 @@ nclusters <- parallel::detectCores() - 1
 
 # Create maps. -----------------------------------------------------------
 
+
 lapply(SoI, function(spp){
 
-  df <- mydata_transformed %>% dplyr::filter(Species == spp)
-  myiso <- my_isoscapes[[ grep( paste0( "precip_val_", lapply(my_isoscapes, function(x) x$path_pattern)), pattern = unique(df$isoscape) ) ]]
-  my_range <- range_rasters[[ grep( unlist( lapply(range_rasters, function(x) x$spname) ), pattern = unique(df$Species) ) ]]
-
+  df1 <- mydata_transformed %>% dplyr::filter(Species == spp)
+  myiso <- my_isoscapes[[ grep( paste0( "precip_val_", lapply(my_isoscapes, function(x) x$path_pattern)), pattern = unique(df1$isoscape) ) ]]
+  my_range <- range_rasters[[ grep( unlist( lapply(range_rasters, function(x) x$spname) ), pattern = unique(df1$Species) ) ]]
   mypath <- file.path( wd$bin, spp)
   if(!dir.exists(mypath)) dir.create(mypath)
 
-  isocat::isotopeAssignmentModel(
-    ID               = df$ID,
-    isotopeValue     = df$dDprecip,
-    SD_indv          = df$sd_resid_bySource,
-    precip_raster    = myiso$isoscape,
-    precip_SD_raster = myiso$sd,
-    savePath         = mypath,
-    additionalModels = my_range$range_raster,
-    nClusters = nclusters
-  )
+  mySurfaces <- pbmcapply::pbmclapply(1:nrow(df1), mc.cores = detectCores()-1, function(i) {
+    df <- df1[i,]
 
+    mySurface <- isocat::isotopeAssignmentModel(
+      ID               = df$ID,
+      isotopeValue     = df$dDprecip,
+      SD_indv          = df$sd_resid_bySource,
+      precip_raster    = myiso$isoscape,
+      precip_SD_raster = myiso$sd,
+      additionalModels = my_range$range_raster
+    )
+
+    writeRaster(mySurface, file = file.path(mypath, "Combined_ProbOfOrigin.tif"), bylayer = T, suffix = 'names', overwrite = T)
+  })
 })
 
 
