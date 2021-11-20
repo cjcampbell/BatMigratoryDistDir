@@ -127,6 +127,10 @@ myPlot_sex <- sjPlot::plot_model(m_sex2, type = "pred", terms = c("OriginCluster
 
 ## Main plot ----
 
+#colVals <- c("#2a9d8f","#e76f51")
+colVals <- c("#05668d", "#679436")
+
+
 (ggplot_build(myPlot_sex)$plot$data %>%
   as.data.frame %>%
   dplyr::rename(wind_killed = group_col, Species = facet) %>%
@@ -134,7 +138,7 @@ myPlot_sex <- sjPlot::plot_model(m_sex2, type = "pred", terms = c("OriginCluster
   facet_wrap(~Species) +
   geom_hline(yintercept = 0.5, linetype = 1, color = "grey80") +
   geom_ribbon( aes(x=x, ymin = conf.low, ymax = conf.high, fill = wind_killed, color = wind_killed), alpha = 0.2, linetype = 1, size = 0.15) +
-  geom_path( aes(x=x, y=predicted, color = wind_killed) ) +
+  geom_path( aes(x=x, y=predicted, color = wind_killed) , size = 1) +
   scale_y_continuous(
     "Probability of identification as female",
     limits = c(0,1),
@@ -148,25 +152,28 @@ myPlot_sex <- sjPlot::plot_model(m_sex2, type = "pred", terms = c("OriginCluster
   scale_color_manual(
     breaks = c("no", "yes"),
     labels = c("Live-caught, other sampling methods", "Wind carcass salvage"),
-    values = c("#2a9d8f","#e76f51")
+    values = colVals
   ) +
   scale_fill_manual(
     breaks = c("no", "yes"),
     labels = c("Live-caught, other sampling methods", "Wind carcass salvage"),
-    values = c("#2a9d8f","#e76f51")
+    values = colVals
   ) +
   theme(
     axis.line = element_line(),
-    strip.background = element_rect(fill = NA)
+    strip.background = element_rect(fill = NA),
+    plot.background = element_rect(fill = "white"),
+    panel.background = element_rect(fill = "white"),
+    #panel.grid = element_blank(),
+    #panel.grid.major = element_blank(),
+    #panel.grid.minor = element_blank(),
+    legend.position = c(0.01,1),
+    legend.justification = c("left", "top"),
+    legend.title = element_blank()
   ) ->
   myPlot_sex2)
 
 myPlot_sex2 +
-  theme(
-    legend.position = c(0.01,1),
-    legend.justification = c("left", "top"),
-    legend.title = element_blank()
-    ) +
   geom_text(
     data = data.frame(
       label = c("Southerly\nsummer\norigin", "Northerly\nsummer\norigin"),
