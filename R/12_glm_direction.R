@@ -214,12 +214,12 @@ df_N <- ggplot_build(pN)$plot$data %>% as.data.frame %>% mutate(mod = "N")
 df_S <- ggplot_build(pS)$plot$data %>% as.data.frame %>% mutate(mod = "S")
 df_wide <- rbind(df_N, df_S) %>%
   dplyr::rename(yDay = x, Species = group) %>%
-  mutate(Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired")))
+  mutate(Species = factor(Species, levels = mySpecies))
 
 rug_df <- mdf %>%
   dplyr::select(-c(x, Species)) %>%
   dplyr::rename(Species = commonName) %>%
-  mutate(Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired")))
+  mutate(Species = factor(Species, levels = mySpecies))
 
 # Crop plotted projection to within a certain window of any observations.
 windowToPlot <- 14
@@ -282,12 +282,12 @@ df_wide_filtered %>%
   facet_grid(rows = vars(mod)) +
   scale_color_manual(
     "Species",
-    breaks = c("Hoary", "Eastern red", "Silver-haired"),
+    breaks = mySpecies,
     values = c("#E09F3E", "#A43828", "#335C67")
     )+
   scale_fill_manual(
     "Species",
-    breaks = c("Hoary", "Eastern red", "Silver-haired"),
+    breaks = mySpecies,
     values = c("#E09F3E", "#A43828", "#335C67")
     ) +
   geom_vline(xintercept = peak_x, linetype = 2, alpha = 0.5)
@@ -359,7 +359,7 @@ label_df <-
     ay2 = c(north_touch_y, south_touch_y)
   ) %>%
   dplyr::mutate(
-    Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired"))
+    Species = factor(Species, levels = mySpecies)
   )
 
 

@@ -311,12 +311,12 @@ OriginClusterColors <- list(
 speciesColors <- list(
   scale_color_manual(
     "Species",
-    breaks = c("Hoary", "Eastern red", "Silver-haired"),
+    breaks = mySpecies,
     values = c("#E09F3E", "#A43828", "#335C67")
   ),
   scale_fill_manual(
     "Species",
-    breaks = c("Hoary", "Eastern red", "Silver-haired"),
+    breaks = mySpecies,
     values = c("#E09F3E", "#A43828", "#335C67")
   )
 )
@@ -345,7 +345,7 @@ species_x <- list(
   scale_x_continuous(
     "Species",
     breaks = c(1,2,3),
-    labels = c("Hoary", "Eastern red", "Silver-haired"),
+    labels = mySpecies,
     expand = c(0.15,0.15)
   )
 )

@@ -42,6 +42,7 @@ invisible({
 # Define species codes and binomials.
 SoI <- c("LACI", "LABO", "LANO")
 binoms <- c("Lasiurus cinereus", "Lasiurus borealis", "Lasionycteris noctivagans")
+mySpecies <- c("Hoary", "Eastern red", "Silver-haired")
 
 # Define extent of spatial analysis.
 # Unit == meters

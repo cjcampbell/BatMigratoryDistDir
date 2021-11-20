@@ -267,7 +267,7 @@ mydata_minDistDir <- dplyr::rename(minDistEstimates, ID = layer) %>%
       Species == "LABO" ~ "Eastern red",
       Species == "LANO" ~ "Silver-haired"
     ),
-    commonName = factor(commonName, levels = c("Hoary", "Eastern red", "Silver-haired")),
+    commonName = factor(commonName, levels = mySpecies),
     didMove = case_when(
       dist  %in% c("mid", "long") ~ "Y",
       dist  %in% c("short")  ~ "N"
