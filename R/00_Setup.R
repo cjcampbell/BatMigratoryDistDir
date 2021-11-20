@@ -29,8 +29,8 @@ wd <- list()
 wd$R       <- file.path( my_dir_path, "R" )
 wd$bin     <- file.path( my_dir_path, "bin" )
 wd$data    <- file.path( my_dir_path, "data" )
-wd$litdata <- file.path( my_dir_path, "data", "lit_data")
-wd$iucn    <- file.path( my_dir_path, "data", "Chiroptera_NoAm_MesoAm_redlist_species_data_6437449e-d3a3-479e-8c18-169e1749e583")
+wd$litdata <- file.path( my_dir_path, "data", "Lit_data")
+wd$iucn    <- file.path(IUCNlocationData) # This one is in a separate directory, referenced it in the .Rprofile file.
 wd$figs    <- file.path( my_dir_path, "figs" )
 wd$results <- file.path( my_dir_path, "results" )
 
@@ -76,3 +76,4 @@ dropVIF <- function(vifOUT) {
     dplyr::filter(`GVIF^(1/(2*Df))` >= 5) %>%
     row.names() -> p
   print(paste0("Consider dropping: ", p))
+}

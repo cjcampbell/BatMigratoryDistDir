@@ -14,29 +14,6 @@ theme_set(ggpubr::theme_pubclean())
 options(na.action = "na.fail")
 
 
-# Quick fun to return params to include in the next model.
-topDredgeModelPredictors <- function(dredgeModelOutput) {
-  dredgeModelOutput %>%
-    # Find top-performing model
-    dplyr::filter(delta < 2) %>% arrange(df) %>% slice(1) %>% as.data.frame %>%
-    # Pull out predictors.
-    dplyr::select(-c("(Intercept)", "df", "AICc", "delta", "weight", "logLik")) %>%
-    # Make a df.
-    t %>% as.data.frame() ->
-    step1
-  print(paste0("Drop: ", row.names(dplyr::filter(step1, is.na(V1))) ) )
-  print(paste0("Keep: ", row.names(dplyr::filter(step1, !is.na(V1))) ) )
-}
-
-# Quick fun to return params with too-high VIF.
-dropVIF <- function(vifOUT) {
-  vifOUT %>%
-    as.data.frame %>%
-    dplyr::filter(`GVIF^(1/(2*Df))` >= 5) %>%
-    row.names() -> p
-  print(paste0("Consider dropping: ", p))
-}
-
 ## ----plotPosSkew-----------------------------------------------------------------
 
 ggarrange(
@@ -669,10 +646,10 @@ clust_2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("OriginCluster","com
         clust_1, clust_2
       ),
       common.legend = T, labels = c(LETTERS[1:8]),
-      legend = legendPosition, hjust=-0.1, vjust = -0.7,
+      legend = legendPosition, hjust=-0.2, vjust = 0,
       ncol = 2, nrow = 4
       ) +
-    theme(plot.margin = margin(1,0,0,0, "cm"))
+    theme(plot.margin = margin(0.5,0,0,0, "cm"))
 )
 
 
