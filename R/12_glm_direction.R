@@ -12,7 +12,14 @@ mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") )
 theme_set(ggpubr::theme_pubclean())
 options(na.action = "na.fail")
 
-
+# An important interpretation note for anyone checking out this code--
+# individual level "direction" results are presented as "which direction is
+# the likely summer origin from the sample site?". As a result, the models are
+# called 'is-southerly' and 'p_S' and the like, again referring to the direction of the
+# origin relative to the sample site. For clarity in-text, we chose to discuss
+# the direction of the sample site relative to the summer origins (which flows
+# more intuitively from past origin to later sample site). This results in
+# an apparent "flip" of the labels relative to object names-- not an error!
 
 # Exploratory plots -------------------------------------------------------
 
@@ -52,6 +59,8 @@ mydata_minDistDir %>%
   facet_grid(~Species) +
   theme_bw()
 
+mydata_minDistDir %>% count(Species, Sourcefile,dir) %>% ggplot() + geom_bar(aes(y=n, x = Sourcefile , fill = dir), stat="identity") + facet_grid(rows = vars(Species)) + scale_color_viridis_d()
+
 
 # Fit models --------------------------------------------------------------
 
@@ -67,14 +76,14 @@ mdf <- mydata_minDistDir %>%
     !is.na(wind_killed)
   ) %>%
   mutate(
-    is_southerly = if_else(dir == "S", 1, 0),
-    is_northerly = if_else(dir == "N", 1, 0),
+    origin_is_southerly = if_else(dir == "S", 1, 0),
+    origin_is_northerly = if_else(dir == "N", 1, 0),
     is_dir       = if_else(dir != "U", 1, 0)
   )
 
 ## southerly model ----
 m_S1 <- glm(
-  is_southerly ~
+  origin_is_southerly ~
     commonName +
     poly(yday2, 2) +
     wind_killed +
@@ -87,7 +96,7 @@ m_S1 <- glm(
 d_S1 <- MuMIn::dredge(m_S1, beta = "none")
 d_S1 %>% topDredgeModelPredictors
 m_S2 <- glm(
-  is_southerly ~
+  origin_is_southerly ~
     commonName +
     wind_killed +
     commonName:poly(yDay,2),
@@ -106,20 +115,50 @@ sjPlot::plot_model(m_S2, "pred", terms = c("yDay", "commonName"))
 
 pS <-sjPlot::plot_model(m_S2, "pred", terms = c("yDay","commonName"))
 
-### southern Model performance. ----
+### southern origin Model performance. ----
 summary(m_S2)
 gtsummary::tbl_regression(m_S2, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
 performance::r2(m_S2)
 anova(m_S2)
 caret::varImp(m_S2) %>% arrange(desc(Overall))
 
+### Additional calculations referenced in the ms: ----
+pS$data %>%
+  as.data.frame %>%
+  group_by(group) %>%
+  arrange(desc(predicted)) %>%
+  slice(1)
+
+hoaryDat <- pS$data %>%
+  as.data.frame %>%
+  dplyr::filter(group == "Hoary")
+hoaryDat %>%
+  ggplot() +
+  aes(predicted) +
+  stat_ecdf()
+thresh0.90 <- hoaryDat %>%
+  dplyr::summarise(q90 = quantile(predicted, 0.90)) %>%
+  unlist
+hoaryDat %>%
+  dplyr::filter(predicted >= thresh0.90) %>%
+  dplyr::summarise(min = min(x), max = max(x))
+
+LANODat <- pS$data %>%
+  as.data.frame %>%
+  dplyr::filter(group == "Silver-haired")
+thresh0.90 <- LANODat %>%
+  dplyr::summarise(q90 = quantile(predicted, 0.90)) %>%
+  unlist
+LANODat %>%
+  dplyr::filter(predicted >= thresh0.90) %>%
+  dplyr::summarise(min = min(x), max = max(x))
 
 
 
 
 ## northerly model ----
 m_N1 <- glm(
-  is_northerly ~
+  origin_is_northerly ~
     commonName +
     poly(yday2, 2) +
     wind_killed +
@@ -131,7 +170,7 @@ m_N1 <- glm(
 d_N1 <- MuMIn::dredge(m_N1, beta = "none")
 d_N1 %>% topDredgeModelPredictors
 m_N2 <- glm(
-  is_northerly ~
+  origin_is_northerly ~
     commonName +
     poly(yday2, 2) +
     commonName:poly(yDay,2),
@@ -163,9 +202,13 @@ caret::varImp(m_N2) %>% arrange(desc(Overall))
 
 # Combine preds -----
 
-col_N <- "#e76f51"
-col_S <- "#023047"
-
+# col_N <- "#e76f51"
+# col_S <- "#023047"
+# col_N <- "#1780a1"
+# col_S <- "#a01a58"
+col_N <- "#5f5096"
+#col_S <- "#52B788"
+col_S <- "#429f74"
 
 df_N <- ggplot_build(pN)$plot$data %>% as.data.frame %>% mutate(mod = "N")
 df_S <- ggplot_build(pS)$plot$data %>% as.data.frame %>% mutate(mod = "S")
@@ -179,7 +222,7 @@ rug_df <- mdf %>%
   mutate(Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired")))
 
 # Crop plotted projection to within a certain window of any observations.
-windowToPlot <- 30
+windowToPlot <- 14
 ## By species and direction:
 rug_df %>%
   dplyr::filter(dir != "U") %>%
@@ -204,9 +247,55 @@ rug_df %>%
   dplyr::filter(yDay >= start & yDay <= end) ->
   df_wide_filtered
 
+### Additional calculations referenced in the ms: ----
+pN$data %>%
+  as.data.frame %>%
+  group_by(group) %>%
+  arrange(desc(predicted)) %>%
+  slice(1)
+
+pN$data %>% as.data.frame %>% dplyr::filter(group == "Eastern red", x == 1)
+
+
+# At the peak detected-south-of-summering-grounds for hoary bats, what
+# were model predictions for eastern reds?
+peak_x <- df_S %>% dplyr::filter(group_col == "Hoary") %>% arrange(desc(predicted)) %>% slice(1) %>% dplyr::select(x) %>% unlist
+dplyr::filter(df_S, group_col == "Eastern red", x == peak_x)
+dplyr::filter(df_N, group_col == "Eastern red", x == peak_x)
+
+# When was north-of-summering-grounds more probable than south-of-summering-grounds?
+df_wide_filtered %>%
+  dplyr::select(Species, yDay, predicted, mod) %>%
+  pivot_wider(names_from = "mod", values_from = "predicted") %>%
+  dplyr::filter(S > N) %>%
+  nrow
+
+
+# Plot overlapping species CI's -----
+df_wide_filtered %>%
+  ggplot() +
+  geom_ribbon(
+    aes(x=yDay, ymin = conf.low, ymax = conf.high, fill = Species, color = Species,
+      group = interaction(Species, mod)) ,
+    alpha =0.25, linetype = 1, size = 0.15
+    ) +
+  facet_grid(rows = vars(mod)) +
+  scale_color_manual(
+    "Species",
+    breaks = c("Hoary", "Eastern red", "Silver-haired"),
+    values = c("#E09F3E", "#A43828", "#335C67")
+    )+
+  scale_fill_manual(
+    "Species",
+    breaks = c("Hoary", "Eastern red", "Silver-haired"),
+    values = c("#E09F3E", "#A43828", "#335C67")
+    ) +
+  geom_vline(xintercept = peak_x, linetype = 2, alpha = 0.5)
+
+
+
 
 # Plot --------------------------------------------------------------------
-
 
 
 myPlot <- ggplot() +
@@ -217,58 +306,57 @@ myPlot <- ggplot() +
         group = interaction(Species, mod)),
     alpha =0.1, linetype = 1, size = 0.15
   ) +
-  # geom_path(
-  #   data = df_wide_filtered,
-  #   aes(x=yDay, y = conf.low, color = mod, group = interaction(Species, mod) ),
-  #   linetype = 2
-  # ) +
-  # geom_path(
-  #   data = df_wide_filtered,
-  #   aes(x=yDay, y = conf.high, color = mod, group = interaction(Species, mod) ),
-  #   linetype = 2
-  # ) +
   # Plot model predictions.
   geom_path(
     data = df_wide_filtered,
     aes(x=yDay, y = predicted, color = mod, group = interaction(Species, mod) ),
-    linetype = 1
+    linetype = 1, size = 1
   ) +
   # Plot rug plots
   geom_rug(
-    data =  dplyr::filter(rug_df, is_northerly == 1) ,
+    data =  dplyr::filter(rug_df, origin_is_northerly == 1) ,
     aes(x=yDay),
     color = col_N,
     sides = "t"
   )  +
   geom_rug(
-    data = dplyr::filter(rug_df, is_southerly == 1) ,
+    data = dplyr::filter(rug_df, origin_is_southerly == 1) ,
     aes(x=yDay),
     color = col_S,
     sides = "b"
   )  +
   # Facet.
-  facet_wrap(~Species) +
+  facet_wrap(~Species, ncol = 1) +
   # Appearance
   scale_fill_manual(  breaks = c("N", "S"), values = c(col_N, col_S) ) +
   scale_color_manual( breaks = c("N", "S"), values = c(col_N, col_S) ) +
+  scale_x_continuous(expand = c(0,0)) +
   xlab("Day of Year") +
-  ylab("Probability of movement in specified direction") +
+  ylab("Probability of latitudinal movement") +
   theme(
     strip.background = element_rect(fill = "white"),
-    legend.position = "none"
+    legend.position = "none",
+    panel.spacing = unit(2, "lines")
   )
 
 
+north_touch_y <- pN$data %>% as.data.frame %>%
+  dplyr::filter(x == 49, group == "Hoary") %>%
+  {.$conf.high}
+south_touch_y <- pS$data %>% as.data.frame %>%
+  dplyr::filter(x == 120, group == "Hoary") %>%
+  {.$conf.high}
+
 label_df <-
   data.frame(
-    label = c("North-to-south", "South-to-north"),
+    label = c("South of summer origin", "North of summer origin"),
     Species = rep("Hoary", 2),
     x=c(100,00),
     y=c(0.9, 0.2),
     ax1 = c(110, 100),
-    ax2 = c(50,120),
+    ax2 = c(49,120),
     ay1 = c(0.88,0.18),
-    ay2 = c(0.8, 0.1)
+    ay2 = c(north_touch_y, south_touch_y)
   ) %>%
   dplyr::mutate(
     Species = factor(Species, levels = c("Hoary", "Eastern red", "Silver-haired"))
@@ -290,5 +378,5 @@ label_df <-
 ggsave(
   myPlot_labs,
   filename = file.path(wd$figs, "directionOfMovementByYday.png"),
-  width = 8, height = 4
+  width = 3, height = 7
   )
