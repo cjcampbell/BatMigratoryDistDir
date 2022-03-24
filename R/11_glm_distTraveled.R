@@ -506,9 +506,6 @@ doy_spp2 <- p2$data %>%
   dist_y_lim +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
-# plot_doySpp <- ggpubr::ggarrange( plotlist = list( doy_spp1, doy_spp2 ), common.legend = T )
-
-
 
 ## lat -----------------------------------------------------------
 lat_orig_spp1 <- sjPlot::plot_model(m3, type = "pred", terms = c("decimalLatitude","commonName")) %>%
@@ -524,7 +521,6 @@ lat_orig_spp1 <- sjPlot::plot_model(m3, type = "pred", terms = c("decimalLatitud
   }
 
 
-# So step 2 is contingent on IF movement is detected! So we can only ever bottom out IF
 lat_orig_spp2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("decimalLatitude","commonName")) %>%
   {
     .$data %>%
@@ -537,10 +533,6 @@ lat_orig_spp2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("decimalLatitu
       lat
   }
 
-# plot_lat <- ggpubr::ggarrange(
-#   plotlist = list( lat_orig_spp1, lat_orig_spp2 ),
-#   common.legend = T ,
-#   ncol = 2)
 
 
 ## Sampling method ---------------------------------------------------------
