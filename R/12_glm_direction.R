@@ -380,3 +380,85 @@ ggsave(
   filename = file.path(wd$figs, "directionOfMovementByYday.png"),
   width = 3, height = 7
   )
+
+
+
+
+# New version ------------------------------------------------------------
+
+plots <- lapply(mySpecies, function(spp) {
+
+   lapply(c("S", "N"), function(dir){
+    df1 <- dplyr::filter(df_wide_filtered, Species == spp, mod == dir)
+
+    df2a <- dplyr::filter(rug_df, Species == spp)
+    if(dir == "S") {
+      df2 <- dplyr::filter(df2a, origin_is_southerly == 1)
+      df3 <- dplyr::filter(df2a, origin_is_southerly == 0 )
+      whichCol <- col_S
+      ymx <- 0.5
+    } else if (dir == "N") {
+      df2 <- dplyr::filter(df2a, origin_is_northerly == 1)
+      df3 <- dplyr::filter(df2a, origin_is_northerly == 0)
+      whichCol <- col_N
+      ymx <- 1
+    }
+
+    p <- ggplot() +
+      geom_segment(aes(x = 0,   xend = 0,   y = 0, yend=Inf, color = "grey50") ) +
+      geom_segment(aes(x = 365, xend = 365, y = 0, yend=Inf, color = "grey50") ) +
+
+      # Plot CI's
+      geom_ribbon(
+        data = df1,
+        aes(x=yDay, ymin = conf.low, ymax = conf.high, fill = mod, color = mod,
+            group = interaction(Species, mod)),
+        alpha =0.1, linetype = 1, size = 0.15
+      ) +
+      # Plot model predictions.
+      geom_path(
+        data = df1,
+        aes(x=yDay, y = predicted, color = mod, group = interaction(Species, mod) ),
+        linetype = 1, size = 1
+      ) +
+      scale_x_continuous(expand = c(0,0), limits = c(0,365), breaks = c(seq(0,365,by = 75), 365)) +
+      scale_fill_manual(  breaks = c("N", "S"), values = c(col_N, col_S) ) +
+      scale_color_manual( breaks = c("N", "S"), values = c(col_N, col_S) ) +
+      theme(
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.title = element_blank(),
+        strip.background = element_rect(fill = "white"),
+        legend.position = "none",
+        plot.margin = margin(10,20,0,0),
+        plot.title = element_text(hjust = 0.5, vjust = 0)
+      )
+
+    segheight <- 0.12*ymx
+    spacing <- 0.025 * ymx
+
+    p <- p +
+      scale_y_continuous(limits = c(-(spacing*2 + segheight*2), ymx),expand = c(0,0), breaks = seq(0,1, by = 0.2), labels = seq(0,1,by=0.2)) +
+      geom_segment(df2, mapping = aes(x=yDay, xend = yDay, y= -(spacing), yend = -(spacing + segheight) ), color = whichCol, alpha = 0.75) +
+      geom_segment(df3, mapping = aes(x=yDay, xend = yDay, y= -(spacing*2 + segheight), yend = -(spacing*2 + segheight*2) ), color = "grey50", alpha = 0.75)
+
+    return(p)
+
+  })
+
+})
+
+ps <- unlist(plots, recursive = F)
+
+pp <- ggarrange(
+  plotlist = list(
+    ps[[5]] +  ggtitle("Silver-haired") ,
+    ps[[1]] +  ggtitle("Hoary")       + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()),
+    ps[[3]] +  ggtitle("Eastern red") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()),
+    ps[[6]] ,
+    ps[[2]] + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()),
+    ps[[4]] + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+  )
+  , ncol = 3, nrow = 2) %>%
+  arrangeGrob(bottom = "Day of Year", left = "Probability")
+ggsave(pp, filename = file.path(wd$figs, "directionByDay.png"))
