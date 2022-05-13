@@ -17,4 +17,5 @@ data/iucn*
 data/assignR*
 data/*
 figs/*
+docs/*
 R_testing
