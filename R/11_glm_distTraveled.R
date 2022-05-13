@@ -25,7 +25,7 @@ ggarrange(
       geom_histogram() +
       xlab("Movement > 100km observed")
   }, {
-    v %>%
+    mydata_minDistDir %>%
       dplyr::filter(didMove == "Y") %>%
       ggplot() +
       aes(dist_km) +
@@ -129,6 +129,7 @@ dropVIF(car::vif(m3))
 # Lookin good!
 summary(m3)
 #plot(m3)
+
 
 ### Plot. -----
 
@@ -270,6 +271,13 @@ list(
 #gridExtra::grid.arrange(grobs = modPlots2)
 
 plot_model(gl3, sort.est = TRUE)
+
+### Model assumptions check. ------
+resids <- residuals(gl3)
+hist(resids)
+qqnorm(resids)
+qqline(resids)
+shapiro.test(resids)
 
 ## Model performance. ----
 # See https://stats.stackexchange.com/questions/431120/how-to-interpret-parameters-of-glm-output-with-gamma-log-link
