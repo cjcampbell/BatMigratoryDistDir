@@ -25,7 +25,7 @@ ggarrange(
       geom_histogram() +
       xlab("Movement > 100km observed")
   }, {
-    v %>%
+    mydata_minDistDir %>%
       dplyr::filter(didMove == "Y") %>%
       ggplot() +
       aes(dist_km) +
@@ -129,6 +129,7 @@ dropVIF(car::vif(m3))
 # Lookin good!
 summary(m3)
 #plot(m3)
+
 
 ### Plot. -----
 
@@ -270,6 +271,13 @@ list(
 #gridExtra::grid.arrange(grobs = modPlots2)
 
 plot_model(gl3, sort.est = TRUE)
+
+### Model assumptions check. ------
+resids <- residuals(gl3)
+hist(resids)
+qqnorm(resids)
+qqline(resids)
+shapiro.test(resids)
 
 ## Model performance. ----
 # See https://stats.stackexchange.com/questions/431120/how-to-interpret-parameters-of-glm-output-with-gamma-log-link
@@ -506,9 +514,6 @@ doy_spp2 <- p2$data %>%
   dist_y_lim +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
-# plot_doySpp <- ggpubr::ggarrange( plotlist = list( doy_spp1, doy_spp2 ), common.legend = T )
-
-
 
 ## lat -----------------------------------------------------------
 lat_orig_spp1 <- sjPlot::plot_model(m3, type = "pred", terms = c("decimalLatitude","commonName")) %>%
@@ -524,7 +529,6 @@ lat_orig_spp1 <- sjPlot::plot_model(m3, type = "pred", terms = c("decimalLatitud
   }
 
 
-# So step 2 is contingent on IF movement is detected! So we can only ever bottom out IF
 lat_orig_spp2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("decimalLatitude","commonName")) %>%
   {
     .$data %>%
@@ -537,10 +541,6 @@ lat_orig_spp2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("decimalLatitu
       lat
   }
 
-# plot_lat <- ggpubr::ggarrange(
-#   plotlist = list( lat_orig_spp1, lat_orig_spp2 ),
-#   common.legend = T ,
-#   ncol = 2)
 
 
 ## Sampling method ---------------------------------------------------------

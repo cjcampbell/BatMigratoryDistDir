@@ -30,9 +30,8 @@ wd$R       <- file.path( my_dir_path, "R" )
 wd$bin     <- file.path( my_dir_path, "bin" )
 wd$data    <- file.path( my_dir_path, "data" )
 wd$litdata <- file.path( my_dir_path, "data", "Lit_data")
-wd$iucn    <- file.path(IUCNlocationData) # This one is in a separate directory, referenced it in the .Rprofile file.
+wd$iucn    <- file.path(IUCNlocationData) # This  is in a separate directory, referenced it in the .Rprofile file.
 wd$figs    <- file.path( my_dir_path, "figs" )
-wd$results <- file.path( my_dir_path, "results" )
 
 # Check for presence of subdirectories. Create if needed.
 invisible({

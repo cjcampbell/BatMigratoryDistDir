@@ -212,3 +212,104 @@ myPlot_sex2 +
 
 ggsave(myPlot_sex3, filename = file.path(wd$figs, "model_sex_ouput2.png"),
        width = 6, height = 4)
+
+
+
+# New plot with maps ----------------------------------------------------------------
+
+modOut <- ggplot_build(myPlot_sex)$plot$data %>%
+  as.data.frame %>%
+  dplyr::rename(wind_killed = group_col, Species = facet) %>%
+  dplyr::filter(wind_killed != "yes")
+df <- fread( file.path(wd$bin, "OriginClusterSurfaces.csv") )
+
+spp <- SoI[1]
+
+
+
+
+
+
+
+colVals <- c("#05668d", "#679436")
+
+
+(ggplot_build(myPlot_sex)$plot$data %>%
+    as.data.frame %>%
+    dplyr::rename(wind_killed = group_col, Species = facet) %>%
+    dplyr::filter(wind_killed != "yes") %>%
+    ggplot() +
+    facet_wrap(~Species, ncol = 1) +
+    geom_hline(yintercept = 0.5, linetype = 1, color = "grey80") +
+    geom_ribbon( aes(x=x, ymin = conf.low, ymax = conf.high, fill = wind_killed, color = wind_killed), alpha = 0.2, linetype = 1, size = 0.15) +
+    geom_path( aes(x=x, y=predicted, color = wind_killed) , size = 1) +
+    scale_y_continuous(
+      "Probability of identification as female",
+      limits = c(0,1),
+      expand = c(0,0)
+    ) +
+    scale_x_continuous(
+      "OriginCluster",
+      breaks = 1:4,
+      expand = c(0.1,0.1)
+    ) +
+    scale_color_manual(
+      breaks = c("no", "yes"),
+      labels = c("Live-caught, other sampling methods", "Wind carcass salvage"),
+      values = colVals
+    ) +
+    scale_fill_manual(
+      breaks = c("no", "yes"),
+      labels = c("Live-caught, other sampling methods", "Wind carcass salvage"),
+      values = colVals
+    ) +
+    theme(
+      axis.line = element_line(),
+      strip.background = element_rect(fill = NA),
+      plot.background = element_rect(fill = "white"),
+      panel.background = element_rect(fill = "white"),
+      #panel.grid = element_blank(),
+      #panel.grid.major = element_blank(),
+      #panel.grid.minor = element_blank(),
+      legend.position = c(0.01,1),
+      legend.justification = c("left", "top"),
+      legend.title = element_blank()
+    ) ->
+    myPlot_sex2)
+
+myPlot_sex2 +
+  geom_text(
+    data = data.frame(
+      label = c("Southerly\nsummer\norigin", "Northerly\nsummer\norigin"),
+      x=c(1+0.2, 4-0.2),
+      y=rep(0.15),
+      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
+    ),
+    aes(x=x,y=y,label=label),
+    hjust = 0.5, vjust = 1,
+    size = 3
+  ) +
+  geom_segment(
+    data = data.frame(
+      xstart = 1.85,
+      xend = 3.15,
+      y=rep(0.1),
+      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
+    ),
+    aes(x=xstart, xend = xend, y= y, yend = y),
+    lineend = "round", linejoin = "mitre",
+    size = 1.5, arrow = arrow(length = unit(0.12, "inches"))
+  ) +
+  geom_segment(
+    data = data.frame(
+      xstart = 1.85,
+      xend = 3.15,
+      y=rep(0.1),
+      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
+    ),
+    aes(xend=xstart, x = xend, y= y, yend = y),
+    lineend = "round", linejoin = "mitre",
+    size = 1.5, arrow = arrow(length = unit(0.12, "inches"))
+  ) ->
+  myPlot_sex3
+

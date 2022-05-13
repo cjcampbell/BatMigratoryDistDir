@@ -148,7 +148,7 @@ wss <- lapply(SoI, function(spp){
 load(file.path(wd$bin, "quant_clustered_simmatrices.Rdata"))
 lapply(1:3, function(i){
   plot(clustered_simmatrices[[i]]$tree, cex = 0.6, main = SoI[i])
-  rect.hclust(clustered_simmatrices[[i]]$tree, k = 5, border = 2:5)
+  rect.hclust(clustered_simmatrices[[i]]$tree, k = 4, border = 2:5)
 })
 
 
@@ -176,7 +176,7 @@ saveRDS(mydata_aveLat, file = file.path(wd$bin, "mydata_aveLat.rds"))
 
 # Manually decide how many clusters to cut into. -----------------------
 # This part requires manual input!
-k_by_spp <- data.frame(species = SoI, k = c(5,5,5))
+k_by_spp <- data.frame(species = SoI, k = c(4,4,4))
 saveRDS(k_by_spp, file = file.path(wd$bin, "k_by_spp.rds"))
 
 # Cut trees into groups ---------------------------------------------------
@@ -225,3 +225,48 @@ mydata_clustered <- lapply(SoI, function(spp){
   arrange(ID)
 
 saveRDS(mydata_clustered, file = file.path(wd$bin, "mydata_clustered.rds"))
+
+
+# Create summary surfaces -------------------------------------------------
+# Create surface for each species and OriginCluster combination.
+# This will be used for visual representation of likely origins,
+# not for generation of any summary statistics, etc.
+
+library(terra)
+
+mydata <- fread(file.path(wd$data, "alldat.csv"))
+mydata_clustered <- readRDS(file.path(wd$bin, "mydata_clustered.rds"))
+df <- full_join(mydata, mydata_clustered, by = "ID")
+
+summaryRast <- lapply(SoI, function(spp) {
+  s <- terra::rast(file.path(wd$bin,spp, "quantileSimulationSurfaces.grd"))
+  df2 <- dplyr::filter(df, Species == spp)
+
+  sumrasts <- lapply(sort(unique(df2$OriginCluster)), function(cl) {
+
+    df3 <- dplyr::filter(df2, OriginCluster == cl)
+    s2 <- s[[df3$ID]]
+    # Reclassify at threshold == 0.25
+    s3 <- classify(
+      s2,
+      rcl = matrix(c(-Inf, 0.25, 0,
+                     0.25, Inf, 1), ncol = 3, byrow = T)
+      )
+
+    s4 <- app(s3, sum) / nlyr(s3)
+    names(s4) <- paste(spp, cl, sep = "_")
+    return(s4)
+  })
+
+  out <- rast(sumrasts)
+  return(out)
+}) %>%
+  rast()
+
+mytiles <- summaryRast %>%
+  SDMetrics::surface2df()
+names(mytiles)[3] <- "LACI_1"
+mytiles_df <- mytiles %>%
+  pivot_longer(cols = -c("x", "y"))
+
+fwrite(mytiles_df, file = file.path(wd$bin, "OriginClusterSurfaces.csv"))
