@@ -158,7 +158,7 @@ plot_model(gl3, sort.est = TRUE)
 
 ## Model performance. ----
 summary(m3)
-gtsummary::tbl_regression(m3, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+gtsummary::tbl_regression(m3, exponentiate = F, intercept = T) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
 performance::r2(m3)
 anova(m3)
 caret::varImp(m3) %>% arrange(desc(Overall))
@@ -282,7 +282,7 @@ shapiro.test(resids)
 ## Model performance. ----
 # See https://stats.stackexchange.com/questions/431120/how-to-interpret-parameters-of-glm-output-with-gamma-log-link
 summary(gl3)
-gtsummary::tbl_regression(gl3) %>%
+gtsummary::tbl_regression(gl3, intercept= T) %>%
   add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
 performance::r2(gl3)
 anova(gl3)

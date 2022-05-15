@@ -101,7 +101,7 @@ sjPlot::plot_model(m_sex2)
 
 ## Model performance. ----
 summary(m_sex2)
-gtsummary::tbl_regression(m_sex2) %>%
+gtsummary::tbl_regression(m_sex2, intercept = TRUE) %>%
   add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
 performance::r2(m_sex2)
 anova(m_sex2)
@@ -223,7 +223,42 @@ modOut <- ggplot_build(myPlot_sex)$plot$data %>%
   dplyr::filter(wind_killed != "yes")
 df <- fread( file.path(wd$bin, "OriginClusterSurfaces.csv") )
 
-spp <- SoI[1]
+spp <- mySpecies[1]
+
+lapply(mySpecies, function(spp) {
+
+  modOut %>%
+    dplyr::filter(Species == spp) %>%
+    ggplot() +
+    geom_hline(yintercept = 0.5, linetype = 1, color = "grey80") +
+    geom_ribbon( aes(x=x, ymin = conf.low, ymax = conf.high), alpha = 0.2, linetype = 1, size = 0.15) +
+    geom_path( aes(x=x, y=predicted) , size = 1) +
+    scale_y_continuous(
+      "Probability of identification as female",
+      limits = c(0,1),
+      expand = c(0,0)
+    ) +
+    scale_x_continuous(
+      "OriginCluster",
+      breaks = 1:4,
+      expand = c(0.1,0.1),
+      position = "top"
+    )
+
+  lapply(1:4, function(cl) {
+
+    df %>%
+      dplyr::filter(name == paste(SoI[which(spp == mySpecies)], cl, sep = "_")) %>%
+      ggplot() +
+      geom_tile(aes(x=x,y=y,color = value, fill = value)) +
+      scale_fill_viridis_c( option = "mako") +
+      scale_color_viridis_c(option = "mako")
+
+
+
+  })
+
+})
 
 
 

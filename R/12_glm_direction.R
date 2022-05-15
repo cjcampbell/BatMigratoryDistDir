@@ -117,7 +117,7 @@ pS <-sjPlot::plot_model(m_S2, "pred", terms = c("yDay","commonName"))
 
 ### southern origin Model performance. ----
 summary(m_S2)
-gtsummary::tbl_regression(m_S2, exponentiate = F) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+gtsummary::tbl_regression(m_S2, exponentiate = F, intercept = T) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
 performance::r2(m_S2)
 anova(m_S2)
 caret::varImp(m_S2) %>% arrange(desc(Overall))
