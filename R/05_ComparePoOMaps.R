@@ -258,15 +258,13 @@ summaryRast <- lapply(SoI, function(spp) {
     return(s4)
   })
 
-  out <- rast(sumrasts)
+  out <- rast(sumrasts) %>%
+    SDMetrics::surface2df()
+  names(out)[3] <- paste0(spp, "_1")
   return(out)
-}) %>%
-  rast()
 
-mytiles <- summaryRast %>%
-  SDMetrics::surface2df()
-names(mytiles)[3] <- "LACI_1"
-mytiles_df <- mytiles %>%
+}) %>%
+  bind_rows() %>%
   pivot_longer(cols = -c("x", "y"))
 
-fwrite(mytiles_df, file = file.path(wd$bin, "OriginClusterSurfaces.csv"))
+fwrite(summaryRast, file = file.path(wd$bin, "OriginClusterSurfaces.csv"))
