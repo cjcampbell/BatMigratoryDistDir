@@ -223,11 +223,34 @@ modOut <- ggplot_build(myPlot_sex)$plot$data %>%
   dplyr::filter(wind_killed != "yes")
 df <- fread( file.path(wd$bin, "OriginClusterSurfaces.csv") )
 
-spp <- mySpecies[1]
+myPlots <- lapply(mySpecies, function(spp) {
 
-lapply(mySpecies, function(spp) {
+  NoAm <- readRDS( file.path("/Users/cjcampbell/BigZaddyData/NoAm_maps/NoAm.rds") )
+  smallMaps <- lapply(1:4, function(cl) {
+    df1 <- df %>%
+      dplyr::filter(name == paste(SoI[which(spp == mySpecies)], cl, sep = "_")) %>%
+      na.omit()
+    map <- ggplot(df1) +
+      geom_tile(aes(x=x,y=y,color = value, fill = value)) +
+      scale_fill_viridis_c( option = "mako") +
+      scale_color_viridis_c(option = "mako") +
+      geom_sf(
+        data = NoAm,
+        mapping = aes(),
+        fill = NA
+      ) +
+      coord_sf(
+        xlim = c(min(df1$x) - 1e5, max(df1$x) + 1e5 ),
+        ylim = c(min(df1$y) - 1e5, max(df1$y) + 1e5 )
+      ) +
+      theme_void()
+    return(map)
+  })
 
-  modOut %>%
+  mapLegend <- get_legend(smallMaps[[1]])
+  smallMaps <- lapply(smallMaps, function(p) { p + theme(legend.position = "none") } )
+
+  modPlot0 <- modOut %>%
     dplyr::filter(Species == spp) %>%
     ggplot() +
     geom_hline(yintercept = 0.5, linetype = 1, color = "grey80") +
@@ -235,7 +258,8 @@ lapply(mySpecies, function(spp) {
     geom_path( aes(x=x, y=predicted) , size = 1) +
     scale_y_continuous(
       "Probability of identification as female",
-      limits = c(0,1),
+      limits = c(0,1.5),
+      breaks = seq(0,1,0.25),
       expand = c(0,0)
     ) +
     scale_x_continuous(
@@ -243,108 +267,25 @@ lapply(mySpecies, function(spp) {
       breaks = 1:4,
       expand = c(0.1,0.1),
       position = "top"
+    ) +
+    theme(
+      panel.grid = element_blank(),
+      axis.line = element_blank(),
+      axis.text = element_text(size = 12),
+      plot.title = element_text(hjust = 0.5)
     )
 
-  lapply(1:4, function(cl) {
+  modPlot <- modPlot0 +
+    annotation_custom(ggplotGrob(smallMaps[[1]]), xmin = 0.5, xmax = 1.5, ymin = 1, ymax = 1.5) +
+    annotation_custom(ggplotGrob(smallMaps[[2]]), xmin = 1.5, xmax = 2.5, ymin = 1, ymax = 1.5) +
+    annotation_custom(ggplotGrob(smallMaps[[3]]), xmin = 2.5, xmax = 3.5, ymin = 1, ymax = 1.5) +
+    annotation_custom(ggplotGrob(smallMaps[[4]]), xmin = 3.5, xmax = 4.5, ymin = 1, ymax = 1.5) +
+    ggtitle(spp)
 
-    df %>%
-      dplyr::filter(name == paste(SoI[which(spp == mySpecies)], cl, sep = "_")) %>%
-      ggplot() +
-      geom_tile(aes(x=x,y=y,color = value, fill = value)) +
-      scale_fill_viridis_c( option = "mako") +
-      scale_color_viridis_c(option = "mako")
-
-
-
-  })
+  ggsave(modPlot, filename = file.path(wd$figs, paste0(spp, "sexResults.png")), width = 8, height = 6)
+  return(modPlot)
 
 })
 
 
-
-
-
-
-
-colVals <- c("#05668d", "#679436")
-
-
-(ggplot_build(myPlot_sex)$plot$data %>%
-    as.data.frame %>%
-    dplyr::rename(wind_killed = group_col, Species = facet) %>%
-    dplyr::filter(wind_killed != "yes") %>%
-    ggplot() +
-    facet_wrap(~Species, ncol = 1) +
-    geom_hline(yintercept = 0.5, linetype = 1, color = "grey80") +
-    geom_ribbon( aes(x=x, ymin = conf.low, ymax = conf.high, fill = wind_killed, color = wind_killed), alpha = 0.2, linetype = 1, size = 0.15) +
-    geom_path( aes(x=x, y=predicted, color = wind_killed) , size = 1) +
-    scale_y_continuous(
-      "Probability of identification as female",
-      limits = c(0,1),
-      expand = c(0,0)
-    ) +
-    scale_x_continuous(
-      "OriginCluster",
-      breaks = 1:4,
-      expand = c(0.1,0.1)
-    ) +
-    scale_color_manual(
-      breaks = c("no", "yes"),
-      labels = c("Live-caught, other sampling methods", "Wind carcass salvage"),
-      values = colVals
-    ) +
-    scale_fill_manual(
-      breaks = c("no", "yes"),
-      labels = c("Live-caught, other sampling methods", "Wind carcass salvage"),
-      values = colVals
-    ) +
-    theme(
-      axis.line = element_line(),
-      strip.background = element_rect(fill = NA),
-      plot.background = element_rect(fill = "white"),
-      panel.background = element_rect(fill = "white"),
-      #panel.grid = element_blank(),
-      #panel.grid.major = element_blank(),
-      #panel.grid.minor = element_blank(),
-      legend.position = c(0.01,1),
-      legend.justification = c("left", "top"),
-      legend.title = element_blank()
-    ) ->
-    myPlot_sex2)
-
-myPlot_sex2 +
-  geom_text(
-    data = data.frame(
-      label = c("Southerly\nsummer\norigin", "Northerly\nsummer\norigin"),
-      x=c(1+0.2, 4-0.2),
-      y=rep(0.15),
-      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
-    ),
-    aes(x=x,y=y,label=label),
-    hjust = 0.5, vjust = 1,
-    size = 3
-  ) +
-  geom_segment(
-    data = data.frame(
-      xstart = 1.85,
-      xend = 3.15,
-      y=rep(0.1),
-      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
-    ),
-    aes(x=xstart, xend = xend, y= y, yend = y),
-    lineend = "round", linejoin = "mitre",
-    size = 1.5, arrow = arrow(length = unit(0.12, "inches"))
-  ) +
-  geom_segment(
-    data = data.frame(
-      xstart = 1.85,
-      xend = 3.15,
-      y=rep(0.1),
-      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
-    ),
-    aes(xend=xstart, x = xend, y= y, yend = y),
-    lineend = "round", linejoin = "mitre",
-    size = 1.5, arrow = arrow(length = unit(0.12, "inches"))
-  ) ->
-  myPlot_sex3
 
