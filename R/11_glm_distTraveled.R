@@ -165,7 +165,7 @@ caret::varImp(m3) %>% arrange(desc(Overall))
 
 
 
-## Model B -- how far? ----
+## Model B -- how far? ----------------------------------------------
 
 mdf2 <- mdf %>% dplyr::filter(didMove == 1)
 
@@ -184,7 +184,7 @@ gl1 <-
       poly(yday2, 2):OriginCluster +
       commonName:poly(yday2, 2):OriginCluster
     ,
-    data = mdf,
+    data = mdf2,
     na.action = "na.fail",
     family = Gamma(link = "log")
   )
