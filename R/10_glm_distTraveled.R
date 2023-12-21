@@ -8,7 +8,10 @@ library(MuMIn)
 library(caret)
 library(gtsummary)
 
-mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") )
+mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") ) %>%
+  dplyr::mutate(
+    commonName = factor(commonName, levels = mySpecies[c(3,1,2)])
+    )
 
 theme_set(ggpubr::theme_pubclean())
 options(na.action = "na.fail")
@@ -154,11 +157,11 @@ list(
   } ) -> modPlots1
 
 #gridExtra::grid.arrange(grobs = modPlots1)
-plot_model(gl3, sort.est = TRUE)
+plot_model(m3, sort.est = TRUE)
 
 ## Model performance. ----
 summary(m3)
-gtsummary::tbl_regression(m3, exponentiate = F, intercept = T) %>% add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+gtsummary::tbl_regression(m3, exponentiate = F, intercept = T) %>% add_q() %>% bold_p(t = 0.05, q = TRUE) %>% italicize_levels()
 performance::r2(m3)
 anova(m3)
 caret::varImp(m3) %>% arrange(desc(Overall))
@@ -280,10 +283,9 @@ qqline(resids)
 shapiro.test(resids)
 
 ## Model performance. ----
-# See https://stats.stackexchange.com/questions/431120/how-to-interpret-parameters-of-glm-output-with-gamma-log-link
 summary(gl3)
-gtsummary::tbl_regression(gl3, intercept= T) %>%
-  add_q() %>% bold_p(t = 0.10, q = TRUE) %>% italicize_levels()
+gtsummary::tbl_regression(gl3, intercept= T, exponentiate = F) %>%
+  add_q() %>% bold_p(t = 0.05, q = TRUE) %>% italicize_levels()
 performance::r2(gl3)
 anova(gl3)
 caret::varImp(gl3) %>% arrange(desc(Overall))
@@ -412,84 +414,8 @@ prob_y_lim <- list(
 legendPosition <- "bottom"
 
 
-# Plot each significant predictor -----------------------------------------------------------------
 
-## Arrange -----
-myGrobs <- list(
-
-  ggarrange(
-    plotlist = list(
-
-      ggarrange(
-        plotlist = list(
-          modPlots1[[1]] + margins + prob_y + dayOfYear_x,
-          modPlots2[[1]] + margins + dist_y + dayOfYear_x
-        ),
-        labels = c(LETTERS[1:2])
-      ),
-      ggarrange(
-        plotlist = list(
-          modPlots1[[2]] + margins + prob_y ,
-          modPlots2[[2]] + margins + dist_y
-        ),
-        labels = c(LETTERS[3:4])
-      ),
-      ggarrange(
-        plotlist = list(
-          modPlots1[[3]] + margins + prob_y + wind_killed,
-          modPlots2[[3]] + margins + dist_y + wind_killed
-        ),
-        labels = c(LETTERS[5:6])
-      ),
-      ggarrange(
-        plotlist = list(
-          modPlots1[[4]] + margins + prob_y + lat,
-          modPlots2[[4]] + margins + dist_y + lat
-        ),
-        labels = c(LETTERS[7:8])
-      )
-
-    )
-  ),
-
-  ggpubr::ggarrange(
-    plotlist = list(
-      modPlots1[[5]] + margins + prob_y + OriginClusterColors + species_x,
-      modPlots2[[5]] + margins + dist_y + OriginClusterColors + species_x,
-      modPlots1[[8]] + margins + prob_y + OriginClusterColors + dayOfYear_x,
-      modPlots2[[8]] + margins + dist_y + OriginClusterColors + dayOfYear_x
-    ),
-    ncol = 2, nrow = 2, common.legend = T, legend = legendPosition,
-    labels = c(LETTERS[9:12]), hjust=-0.1, vjust = -1
-  ) +
-    theme(plot.margin = margin(1,0,0,0, "cm")) ,
-
-  ggpubr::ggarrange(
-    plotlist = list(
-      modPlots1[[6]] + margins + prob_y + speciesColors + wind_killed,
-      modPlots2[[6]] + margins + dist_y + speciesColors + wind_killed,
-      modPlots1[[7]] + margins + prob_y + speciesColors + lat,
-      modPlots2[[7]] + margins + dist_y + speciesColors + lat
-    ),
-    ncol = 2, nrow = 2, common.legend = T, legend = legendPosition,
-    labels = c(LETTERS[12:15]), hjust=-0.1, vjust = -1
-  ) +
-    theme(plot.margin = margin(1,0,0,0, "cm"))
-
-)
-
-
-arrangeGrob(
-  grobs = myGrobs, ncol=1, nrow= 3
-) -> bigP
-
-## Save ----
-ggsave(bigP, filename = file.path(wd$figs, "SI_allDistanceModelResults.png"),
-       width = 8, height = 11)
-
-
-
-# Figure 3 Selected interactions---------------------------------------------------------
+# Selected interactions---------------------------------------------------------
 
 ## Effect of doy -----------------------------------------------------------
 
@@ -597,16 +523,9 @@ p_sam2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("wind_killed","common
     limits = c(0.5,2.5)
   )
 
-# plot_sampling <- ggpubr::ggarrange(
-#   plotlist = list(
-#     p_sam1,
-#     p_sam2
-#   ),
-#   common.legend = T
-# )
 
 
-## OriginCluster -----------------------------------------------------------
+## Relative latitude of summer habitat -----------------------------------------------------------
 clust_1 <- sjPlot::plot_model(m3, type = "pred", terms = c("OriginCluster","commonName")) %>%
   {
     .$data %>%
@@ -616,7 +535,7 @@ clust_1 <- sjPlot::plot_model(m3, type = "pred", terms = c("OriginCluster","comm
       geom_path(aes(y=predicted), size = 1.5) +
       prob_y_lim +
       speciesColors +
-      scale_x_continuous("OriginCluster")
+      scale_x_continuous("Relative summer latitude")
   }
 
 
@@ -629,15 +548,14 @@ clust_2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("OriginCluster","com
       geom_path(aes(y=predicted), size = 1.5) +
       dist_y_lim +
       speciesColors +
-      scale_x_continuous("OriginCluster")
+      scale_x_continuous("Relative summer latitude")
   }
 
 
 
 ## Combine -----------------------------------------------------------------
 
-(
-  BigPlotBySpecies <-
+BigPlotBySpecies <-
     ggpubr::ggarrange(
       plotlist = list(
         doy_spp1, doy_spp2 ,
@@ -650,8 +568,29 @@ clust_2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("OriginCluster","com
       ncol = 2, nrow = 4
       ) +
     theme(plot.margin = margin(0.5,0,0,0, "cm"))
-)
-
 
 ggsave(BigPlotBySpecies, filename = file.path(wd$figs, "distanceModelResults.png"),
        width = 6, height = 9)
+
+BigPlotBySpecies2 <-
+  ggpubr::ggarrange(
+    plotlist = list(
+      doy_spp1, doy_spp2 ,
+      p_sam1, p_sam2
+    ),
+    common.legend = T, labels = c(LETTERS[1:4]),
+    legend = legendPosition, hjust=-0.2, vjust = 0,
+    ncol = 2, nrow = 2
+  ) +
+  theme(plot.margin = margin(0.5,0,0,0, "cm"))
+
+ggsave(BigPlotBySpecies2, filename = file.path(wd$figs, "distanceModelResults-SI.png"),
+       width = 6, height = 4)
+
+# Save for later plotting.
+save(doy_spp1, doy_spp2 ,
+     p_sam1, p_sam2,
+     lat_orig_spp1, lat_orig_spp2,
+     clust_1, clust_2,
+     file = file.path(wd$bin, "distModelPlots.RData")
+     )
