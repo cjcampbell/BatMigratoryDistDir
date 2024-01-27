@@ -3,7 +3,7 @@ library(ggpubr)
 
 p <- mydata_transformed %>%
   dplyr::mutate(commonName = case_when(Species == "LACI"~ "Hoary", Species == "LABO" ~ "Eastern red", Species == "LANO" ~ "Silver-haired")) %>%
-  dplyr::mutate( commonName = factor(commonName, levels = c("Hoary", "Eastern red", "Silver-haired")) ) %>%
+  dplyr::mutate( commonName = factor(commonName, levels = c("Silver-haired", "Hoary", "Eastern red")) ) %>%
   ggplot(aes(d2H)) +
   geom_histogram() +
   facet_grid(~commonName) +

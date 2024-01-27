@@ -6,8 +6,9 @@ library(gridExtra)
 theme_set(ggpubr::theme_pubclean())
 wss <- readRDS(file.path(wd$bin, "wss.rds"))
 if(!exists("mydata_clustered")) mydata_clustered <- readRDS(file.path(wd$bin, "mydata_clustered.rds"))
+if(!exists("mydata_transformed")) mydata_transformed <- readRDS( file.path(wd$bin, "mydata_transformed.rds") )
 keyToClusterOrder <- mydata_clustered %>% left_join(mydata_transformed) %>% dplyr::select(OriginCluster, ID, Species) %>% count(Species, OriginCluster)
-
+load(file.path(wd$bin, "quant_clustered_simmatrices.Rdata"))
 # Plots showing cluster outputs -------------------------------------------
 
 bigPlots <- lapply(1:3, function(i){
@@ -25,13 +26,13 @@ bigPlots <- lapply(1:3, function(i){
   # Plot trees.
   key <- dplyr::filter(keyToClusterOrder , Species == SoI[i] )
   tree <- clustered_simmatrices[[i]]$tree
-  k <- 5
+  k <- 4
   cluster <- cutree(tree, k = k)
   clustab <- table(cluster)[unique(cluster[tree$order])]
   m <- c(0, cumsum(clustab))
   which <- 1L:k
 
-  rectDeets <- lapply(1:5, function(n) {
+  rectDeets <- lapply(1:4, function(n) {
     data.frame(
       l = m[which[n]] + 0.66,
       t= par("usr")[3L],
@@ -69,9 +70,9 @@ bigPlots <- lapply(1:3, function(i){
 
 p3 <- ggarrange(
   plotlist = list(
+    bigPlots[[3]][[1]],bigPlots[[3]][[2]]),
     bigPlots[[1]][[1]],bigPlots[[1]][[2]],
     bigPlots[[2]][[1]],bigPlots[[2]][[2]],
-    bigPlots[[3]][[1]],bigPlots[[3]][[2]]),
   nrow = 3, ncol =2, labels = "AUTO",
   widths = c(1,3)
 )

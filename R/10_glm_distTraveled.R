@@ -8,9 +8,11 @@ library(MuMIn)
 library(caret)
 library(gtsummary)
 
+mySpecies_ordered <- mySpecies[c(3,1,2)]
+
 mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") ) %>%
   dplyr::mutate(
-    commonName = factor(commonName, levels = mySpecies[c(3,1,2)])
+    commonName = factor(commonName, levels = mySpecies_ordered)
     )
 
 theme_set(ggpubr::theme_pubclean())
@@ -321,13 +323,13 @@ OriginClusterColors <- list(
 speciesColors <- list(
   scale_color_manual(
     "Species",
-    breaks = mySpecies,
-    values = c("#E09F3E", "#A43828", "#335C67")
+    breaks = mySpecies_ordered,
+    values = c( "#335C67", "#E09F3E", "#A43828")
   ),
   scale_fill_manual(
     "Species",
-    breaks = mySpecies,
-    values = c("#E09F3E", "#A43828", "#335C67")
+    breaks = mySpecies_ordered,
+    values = c( "#335C67", "#E09F3E", "#A43828")
   )
 )
 dayOfYear_x <- list(
@@ -354,8 +356,8 @@ lat <- list(
 species_x <- list(
   scale_x_continuous(
     "Species",
-    breaks = c(1,2,3),
-    labels = mySpecies,
+    breaks = c(3,1,2),
+    labels = mySpecies_ordered,
     expand = c(0.15,0.15)
   )
 )
@@ -492,7 +494,7 @@ p_sam1 <- sjPlot::plot_model(m3, type = "pred", terms = c("wind_killed","commonN
   scale_x_continuous(
     "Sampling method",
     breaks = c(1,2),
-    labels = c("Live-caught, etc.", "Wind killed"),
+    labels = c("Live-caught, etc.", "Wind energy facility"),
     limits = c(0.5,2.5)
   ) +
   prob_y_lim
@@ -519,7 +521,7 @@ p_sam2 <- sjPlot::plot_model(gl3, type = "pred", terms = c("wind_killed","common
   scale_x_continuous(
     "Sampling method",
     breaks = c(1,2),
-    labels = c("Live-caught, etc.", "Wind killed"),
+    labels = c("Live-caught, etc.", "Wind energy facility"),
     limits = c(0.5,2.5)
   )
 
@@ -585,7 +587,7 @@ BigPlotBySpecies2 <-
   theme(plot.margin = margin(0.5,0,0,0, "cm"))
 
 ggsave(BigPlotBySpecies2, filename = file.path(wd$figs, "distanceModelResults-SI.png"),
-       width = 6, height = 4)
+       width = 10, height = 8)
 
 # Save for later plotting.
 save(doy_spp1, doy_spp2 ,

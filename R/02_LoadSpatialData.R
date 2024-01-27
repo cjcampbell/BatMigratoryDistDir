@@ -51,7 +51,8 @@ if(download_GADM == TRUE){
   NoAm <- raster::bind(
     MEX, USA, CAN, GTM#, BLZ, SLV, HND, NIC
   )
-  #saveRDS(NoAm, file = file.path(wd$bin, "NoAm.rds"))
+  saveRDS(NoAm, file = file.path(wd$bin, "NoAm.rds"))
+
   NoAm_boundary_aea <- sf::st_as_sf(NoAm) %>%
     st_transform(crs = myCRS) %>%
     st_simplify(preserveTopology = FALSE, dTolerance = 5e3) %>%

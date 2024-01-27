@@ -5,6 +5,7 @@ library(lmerTest)
 library(sjPlot)
 library(caret)
 library(ggpubr)
+library(gtsummary)
 
 mydata_minDistDir <- readRDS(file.path(wd$bin,"mydata_minDistDir.rds") ) %>%
   dplyr::mutate(commonName = factor(commonName, levels = mySpecies[c(3,1,2)]))
@@ -143,7 +144,7 @@ speciesColors <- list(
     values = c("#E09F3E", "#A43828", "#335C67")
   )
 )
-
+myPlot_sex <- sjPlot::plot_model(m_sex2, type = "pred", terms = c("OriginCluster","wind_killed", "commonName"))
 myPlot_sex4 <- ggplot_build(myPlot_sex)$plot$data %>%
    as.data.frame %>%
    dplyr::rename(wind_killed = group_col, Species = facet) %>%
@@ -176,7 +177,7 @@ myPlot_sex4 <- ggplot_build(myPlot_sex)$plot$data %>%
       label = c("Southerly\nsummer\norigin", "Northerly\nsummer\norigin"),
       x=c(1+0.2, 4-0.2),
       y=rep(0.2),
-      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
+      Species = rep(factor("Silver-haired", levels = levels(myPlot_sex$data$facet)))
     ),
     aes(x=x,y=y,label=label),
     hjust = 0.5, vjust = 1,
@@ -187,7 +188,7 @@ myPlot_sex4 <- ggplot_build(myPlot_sex)$plot$data %>%
       xstart = 1.85,
       xend = 3.15,
       y=rep(0.15),
-      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
+      Species = rep(factor("Silver-haired", levels = levels(myPlot_sex$data$facet)))
     ),
     aes(x=xstart, xend = xend, y= y, yend = y),
     lineend = "round", linejoin = "mitre",
@@ -198,7 +199,7 @@ myPlot_sex4 <- ggplot_build(myPlot_sex)$plot$data %>%
       xstart = 1.85,
       xend = 3.15,
       y=rep(0.15),
-      Species = rep(factor("Hoary", levels = levels(myPlot_sex$data$facet)))
+      Species = rep(factor("Silver-haired", levels = levels(myPlot_sex$data$facet)))
     ),
     aes(xend=xstart, x = xend, y= y, yend = y),
     lineend = "round", linejoin = "mitre",

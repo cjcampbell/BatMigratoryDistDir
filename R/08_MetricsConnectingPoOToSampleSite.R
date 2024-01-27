@@ -187,10 +187,9 @@ i <- mydata_transformed$ID[1]
 mydf <- stackOfQSSurfaces[[i]] %>%
   SDMetrics::surface2df()
 
-if(!exists("stackOfQSSurfaces")) { stackOfQSSurfaces <- raster::stack( file.path(wd$bin, "stackOfQSSurfaces.grd")) }
 # Location of distdir info:
 wd$tmpDistDir <- file.path(wd$bin,"tmpDistDir")
-if(!dir.exists(wd$tmpDistDir) ) error("Go back a couple steps and fill this tmp directory.")
+if(!dir.exists(wd$tmpDistDir) ) stop("Go back a couple steps and fill this tmp directory.")
 
 mostLikelyDirection0 <- pbmcapply::pbmclapply(
   1:nlayers(stackOfQSSurfaces),
@@ -213,7 +212,8 @@ mostLikelyDirection0 <- pbmcapply::pbmclapply(
 
     if(length(unique(myDFwithCoords$layer))!=1) stop("Something went wrong reading in layer-specific data!")
 
-    # Make relativizing val/distance
+    # Conservative distance-decay function to prevent equal sampling in very distant locations,
+    # which might bias results based on the position of sampling location.
     df <- myDFwithCoords %>%
       dplyr::mutate(
         dist_rescaled = 1-scales::rescale(dist_km),
