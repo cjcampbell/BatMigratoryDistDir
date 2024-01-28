@@ -25,3 +25,11 @@ Scripts used to read and clean data, run analyses, plot figures.
 | 15_TableSummarizeTransferFunctions.R    | Generate data for table summarizing transfer functions |
 | 16_plotClusterOutputs.R                 | Make plots of trees and clusters with sample sizes (Figure S2) |
 | 17_plotIsoscapeGlobe.R                  | Plot isoscape on globe used in conceptual figure (Fig 1) |
+
+### /data/
+Data used in this study.
+
+| File / directory                        | Description |
+| -----------                             | ----------- |
+| /Lit_data/Baerwald data.csv             | Published data from Baerwald, E. F., W. P. Patterson, and R. M. R. Barclay. "Origins and migratory patterns of bats killed by wind turbines in southern Alberta: evidence from stable isotopes." Ecosphere 5, no. 9 (2014): 1-17. |
+| /Lit_data/cryan data.csv             | Published data from Cryan, P.M., Bogan, M.A., Rye, R.O., Landis, G.P. and Kester, C.L., 2004. Stable hydrogen isotope analysis of bat hair as evidence for seasonal molt and long-distance migration. Journal of Mammalogy, 85(5), pp.995-1001. |
