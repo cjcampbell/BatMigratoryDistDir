@@ -84,4 +84,3 @@ p3 <- ggarrange(
   widths = c(1,3)
 )
 ggsave(p3, file = file.path(wd$figs, "wss_TreePlots.png"), width = 9, height = 8)
-

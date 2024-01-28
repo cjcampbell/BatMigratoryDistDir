@@ -69,9 +69,6 @@ mymap2 <- ggplot() +
   geom_tile(gs_NoAm, mapping = aes(x=x,y=y,fill=value,color=value)) +
   scale_color_gradientn(expression(paste(delta^2 ~ H[fur], " (", "\u2030", ", VSMOW)") ),  colors = c("#060215", "#150B38", viridis::viridis(10), "#FDE400"), na.value = "grey90" ) +
   scale_fill_gradientn( expression(paste(delta^2 ~ H[fur], " (", "\u2030", ", VSMOW)") ),  colors = c("#060215", "#150B38", viridis::viridis(10), "#FDE400"), na.value = "grey90" ) +
-
-  # scale_fill_viridis_c( option = "viridis", begin = 0, na.value = "grey90") +
-  # scale_color_viridis_c(option = "viridis", begin = 0, na.value = "grey90") +
   scale_y_continuous(
     breaks = c(-23.43629, 0, 23.43629),
     minor_breaks = seq(-180, 180, by = 10)
@@ -88,7 +85,6 @@ mymap2 <- ggplot() +
     axis.title = element_blank(),
     panel.grid.major = element_line(color = "grey50"),
     panel.grid.minor = element_line(colour = "grey80")
-    #panel.grid.minor= element_line(colour = 'transparent')
   )
 ggsave(mymap2, filename = file.path(wd$figs, "isoscape2-2.png"), width = 10, height = 10, bg = "transparent")
 

@@ -172,13 +172,8 @@ if(reload_IUCN_rangemaps == TRUE){
       st_transform(crs = myCRS) %>%
       st_simplify(preserveTopology = TRUE, dTolerance = 5000) %>%
       st_make_valid() %>%
-      #st_crop(., st_bbox(NoAm_boundary_aea)) %>%
       st_intersection(., NoAm_boundary_aea) %>%
       st_combine()
-    #st_mask(., st_buffer(NoAm_boundary_aea, dist = 100e3))
-    # st_crop(., # Hackey way to remove South American poly's.
-    #         raster::extent( -55e5, 26e5, -29e5, 53e5 )
-    #)
   })
 
   # For each species, find distance of all points to its IUCN rangemap polygon.

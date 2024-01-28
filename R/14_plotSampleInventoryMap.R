@@ -160,24 +160,6 @@ myPlots <- lapply(SoI[c(3,1,2)], function(spp) {
       ymax = -29.6e5 + (30e5+29.6e5)/3
     )
 
-  # # Fix the width of the annotation raster.
-  #   img_width <- (26e5 + 50e5)/3
-  #   img_height <- img_width*dim(mySppImage)[1]/dim(mySppImage)[2]
-  #
-  #   get(paste0("imgPath_", spp)) %>%
-  #     readJPEG() ->
-  #     mySppImage
-  # big2 <- big +
-  #   annotation_raster(
-  #     mySppImage,
-  #     ymin = 33e5 - img_height,
-  #     ymax = 33e5,
-  #     xmin = -52e5,
-  #     xmax = -52e5 + img_width
-  #   ) +
-  #   ggtitle(tit)
-  # return(list(big2, myLegend))
-
   return(list(big, myLegend))
 
 })
