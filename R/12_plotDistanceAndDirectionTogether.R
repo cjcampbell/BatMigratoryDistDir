@@ -1,4 +1,6 @@
 
+# Plotting model outputs from distance and direction of travel analyses.
+
 library(ggplot2)
 library(ggpubr)
 

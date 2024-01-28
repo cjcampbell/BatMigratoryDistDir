@@ -15,10 +15,6 @@ if(download_GADM == TRUE){
 
   message("Loading GADM data...")
 
-  # First, make NoAm_sf (an "sf" object) fit extent object (my_extent).
-  # my_extent_aea_st <- st_bbox(st_transform(st_as_sfc(st_bbox(my_extent, crs = 4326)), myCRS))
-  # saveRDS(my_extent_aea_st, file = file.path(wd$bin, "my_extent_aea_st.rds"))
-
   # Get GADM data to state level.
   USA <- raster::getData('GADM', path = wd$bin, country='USA', level=0)
   MEX <- raster::getData('GADM', path = wd$bin, country='MEX', level=0)

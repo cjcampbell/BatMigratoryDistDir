@@ -1,3 +1,6 @@
+
+# Plot histogram of d2H values.
+
 mydata_transformed <- readRDS( file.path(wd$bin, "mydata_transformed.rds") )
 library(ggpubr)
 

@@ -1,3 +1,6 @@
+
+# Generate data for table summarizing transfer functions applied..
+
 selectedTransferFunctions <- readRDS(file.path( wd$bin, "sma_selected.rds"))
 resids <- readRDS(file.path(wd$bin, "residual_sumtab.rds"))
 

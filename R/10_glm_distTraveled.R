@@ -1,4 +1,7 @@
-## ----setup --------------------------------------------------------
+
+# Models explaining variance in distance traveled.
+
+# ----setup --------------------------------------------------------
 library(tidyverse)
 library(ggpubr)
 library(gridExtra)

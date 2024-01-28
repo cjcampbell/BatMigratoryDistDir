@@ -1,3 +1,6 @@
+
+# This script pulls out distance and direction of travel metrics for each individual.
+
 # Setup -------------------------------------------------------------------
 
 mydata_transformed <- readRDS( file.path(wd$bin, "mydata_transformed.rds") )

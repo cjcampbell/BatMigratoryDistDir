@@ -1,7 +1,14 @@
 
+# Make Figure 2 - plots of sample acquisitions.
+
 # Setup -------------------------------------------------------------------
 
-NoAm <- readRDS( file.path("/Users/cjcampbell/BigZaddyData/NoAm_maps/NoAm.rds"))
+NoAm_sf <- readRDS( file.path(wd$bin, "NoAm.rds")) %>%
+  st_as_sf() %>%
+  st_transform(myCRS) %>%
+  st_simplify(dTolerance = 1e3)
+
+
 mydata_transformed <- readRDS( file.path(wd$bin, "mydata_transformed.rds") )
 if(!exists("sma_results")) sma_results <- readRDS(file = file.path(wd$bin, "sma_results.rds"))
 sma_selected <- sma_results %>%
@@ -13,47 +20,42 @@ sma_selected <- sma_results %>%
   slice(1)
 load(file.path(wd$bin, "range_raster.Rdata" ), verbose = TRUE)
 load(file.path(wd$bin, "my_isoscapes.RData"), verbose = TRUE)
+NoAm_boundary_aea <- readRDS( file.path(wd$bin, "NoAm_boundary_aea.rds") )
 
 
 # Plot ------------------------------------------------------------------
 
-NoAm_boundary_aea <- readRDS( file.path(wd$bin, "NoAm_boundary_aea.rds") )
-
-
 if(!exists("ranges_mySpecies")) {
+
   # Load candidate rangemaps.
-  ranges_NoAmBats <- rgdal::readOGR(dsn = wd$iucn, layer = "data_0")
+  ranges_mySpecies <- file.path(wd$data, "iucn") %>%
+    list.files(pattern = "data_0.shp", recursive = T, full.names = T) %>%
+    lapply(function(x) {
 
-  # Filter to species of interest.
-  # This analysis is focused on extant species in Continental North America,
-  # so filter out extinct and island populations.
-  ranges_mySpecies <- ranges_NoAmBats[ ranges_NoAmBats$BINOMIAL %in% binoms , ] %>%
-    .[.$LEGEND != "Extinct" , ] %>%
-    .[ is.na(.$ISLAND) , ]
+      # This analysis is focused on extant species in Continental North America,
+      # so filter out extinct and island populations.
+      out <-
+        st_read(x) %>%
+        dplyr::mutate(Species = case_when(
+          BINOMIAL == "Lasiurus cinereus" ~"LACI",
+          BINOMIAL == "Lasionycteris noctivagans" ~ "LANO",
+          BINOMIAL == "Lasiurus borealis" ~"LABO",
+        )) %>%
+        dplyr::filter(LEGEND != "Extinct") %>% # Keep only extant ranges
+        st_transform(crs = myCRS) %>%
+        st_simplify(preserveTopology = TRUE, dTolerance = 5000) %>%
+        st_make_valid() %>%
+        #st_union() %>%
+        st_intersection(NoAm_boundary_aea)
+      return(out)
 
-  # Then separate each rangemap by species.
-  # Convert to simple features object and reproject to myCRS.
-  ranges_bySpecies <- lapply(binoms, function(i){
-    x <- ranges_mySpecies[ ranges_mySpecies$BINOMIAL == i , ]
-    x$Species <- if_else(
-      i == "Lasiurus cinereus", "LACI",
-      if_else(i == "Lasionycteris noctivagans", "LANO",
-              "LABO"
-      )
-    )
-    x %>%
-      st_as_sf(crs = 4326) %>%
-      st_transform(crs = myCRS) %>%
-      st_simplify(preserveTopology = TRUE, dTolerance = 5000) %>%
-      st_make_valid() %>%
-      st_intersection(., NoAm) %>%
-      st_combine()
+    }) %>%
+    bind_rows()
 
-  })
 }
 
 
-lapply(SoI, function(spp) {
+myPlots <- lapply(SoI[c(3,1,2)], function(spp) {
 
   library(cowplot)
   library(ggpubr)
@@ -65,27 +67,21 @@ lapply(SoI, function(spp) {
     spp == "LANO" ~ "Silver-haired"
   )
 
-  get(paste0("imgPath_", spp)) %>%
-    readJPEG() ->
-    mySppImage
-
-  myRange <-
-    case_when(
-      spp == "LACI" ~ ranges_bySpecies[1] ,
-      spp == "LABO" ~ ranges_bySpecies[2] ,
-      spp == "LANO" ~ ranges_bySpecies[3]
-    )
+  myRange <- dplyr::filter(ranges_mySpecies, Species == spp) %>%
+    st_union()
 
   mdf <- dplyr::filter(mydata_transformed, Species == spp)
+  mdf_sf <- st_as_sf(mdf, crs = myCRS, coords = c("metersLongitude", "metersLatitude"))
 
   colorDeets <- list(
     scale_fill_viridis_c(
       "Sampling intensity (count individuals, log10 scale)",
-      option = "viridis",
-      begin=0.1,
+      option = "mako",
+      begin=0,end = 0.8,
       breaks = seq(0,2,by=1),
       labels = 10^seq(0,2,by=1),
-      limits = c(0,2.7)
+      limits = c(0,2.7),
+      direction = -1
     )
   )
 
@@ -120,24 +116,18 @@ lapply(SoI, function(spp) {
       legend.position = "none"
     )
 
+  # Assign points to grid, calculate counts.
+  mygrid <- st_make_grid(NoAm_sf, cellsize =  c(500e3,500e3), square = F) %>%
+    st_sf()
+  mygrid$counts <- lengths(st_intersects(mygrid, mdf_sf))
+  mygrid <- dplyr::filter(mygrid, counts != 0)
+
   myMap0 <- ggplot() +
-    geom_sf(
-      data = myRange[[1]], mapping = aes()
-    ) +
-    geom_hex(
-      data = mdf,
-      aes(
-        x=metersLongitude, y = metersLatitude,
-        fill=log10(..count..)
-      ),
-      binwidth = c(500e3,500e3)
-    ) +
-    geom_sf(
-      data = NoAm,
-      mapping = aes(),
-      fill = NA
-    ) +
+    geom_sf( data = NoAm_sf, mapping = aes(),fill = "white") +
+    geom_sf( data = myRange, mapping = aes() ) +
+    geom_sf(data = mygrid, mapping = aes(fill = log10(counts)), alpha = 0.9) +
     colorDeets +
+    geom_sf(data = NoAm_sf, mapping = aes(), fill = NA ) +
     theme_bw() +
     guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5)) +
     theme(
@@ -149,8 +139,11 @@ lapply(SoI, function(spp) {
     ) +
     coord_sf(
       ylim = c(-29.6e5, 30e5),
-      xlim = c(-50e5, 26e5)
-    )
+      xlim = c(-50e5, 26e5),
+      label_graticule = "NE"
+    ) +
+    scale_x_continuous(breaks = seq(-140,-60,by=20))+
+    scale_y_continuous(breaks = seq(20,60,by=10))
 
   myLegend <- ggpubr::get_legend(myMap0)
 
@@ -167,23 +160,27 @@ lapply(SoI, function(spp) {
       ymax = -29.6e5 + (30e5+29.6e5)/3
     )
 
-  # Fix the width of the annotation raster.
-    img_width <- (26e5 + 50e5)/3
-    img_height <- img_width*dim(mySppImage)[1]/dim(mySppImage)[2]
+  # # Fix the width of the annotation raster.
+  #   img_width <- (26e5 + 50e5)/3
+  #   img_height <- img_width*dim(mySppImage)[1]/dim(mySppImage)[2]
+  #
+  #   get(paste0("imgPath_", spp)) %>%
+  #     readJPEG() ->
+  #     mySppImage
+  # big2 <- big +
+  #   annotation_raster(
+  #     mySppImage,
+  #     ymin = 33e5 - img_height,
+  #     ymax = 33e5,
+  #     xmin = -52e5,
+  #     xmax = -52e5 + img_width
+  #   ) +
+  #   ggtitle(tit)
+  # return(list(big2, myLegend))
 
-  big2 <- big +
-    annotation_raster(
-      mySppImage,
-      ymin = 33e5 - img_height,
-      ymax = 33e5,
-      xmin = -52e5,
-      xmax = -52e5 + img_width
-    ) +
-    ggtitle(tit)
+  return(list(big, myLegend))
 
-  return(list(big2, myLegend))
-
-}) -> myPlots
+})
 
 p <- ggarrange(
   ncol = 1,
@@ -196,7 +193,7 @@ p <- ggarrange(
   heights = c(1,1,1, 0.2)
 )
 
-ggsave(p, filename = file.path(wd$figs, "inventoryFigs_new.png"),
+ggsave(p, filename = file.path(wd$figs, "inventoryFig_updated_noimg.png"),
        width = 6, height = 12)
 
 
