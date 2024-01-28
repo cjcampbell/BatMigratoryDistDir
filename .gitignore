@@ -16,6 +16,7 @@ data/66100_caitjcampbell_Annual_NoAm_Map_H_1980_2010/*
 data/iucn*
 data/assignR*
 data/*
+!data/alldat.csv
 figs/*
 docs/*
 R_testing
