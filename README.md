@@ -31,5 +31,9 @@ Data used in this study.
 
 | File / directory                        | Description |
 | -----------                             | ----------- |
-| /Lit_data/Baerwald data.csv             | Published data from Baerwald, E. F., W. P. Patterson, and R. M. R. Barclay. "Origins and migratory patterns of bats killed by wind turbines in southern Alberta: evidence from stable isotopes." Ecosphere 5, no. 9 (2014): 1-17. |
-| /Lit_data/cryan data.csv             | Published data from Cryan, P.M., Bogan, M.A., Rye, R.O., Landis, G.P. and Kester, C.L., 2004. Stable hydrogen isotope analysis of bat hair as evidence for seasonal molt and long-distance migration. Journal of Mammalogy, 85(5), pp.995-1001. |
+| /Lit_data/Baerwald data.csv             | Published data from Baerwald, E. F., W. P. Patterson, and R. M. R. Barclay. Origins and migratory patterns of bats killed by wind turbines in southern Alberta: evidence from stable isotopes. _Ecosphere_ 5, no. 9 (2014): 1-17. |
+| /Lit_data/cryan data.csv             | Published data from Cryan, P.M., Bogan, M.A., Rye, R.O., Landis, G.P. and Kester, C.L., 2004. Stable hydrogen isotope analysis of bat hair as evidence for seasonal molt and long-distance migration. _Journal of Mammalogy_, 85(5), pp.995-1001. |
+| /Lit_data/Fraser data.csv            | Published data from Fraser, E.E., Brooks, D. and Longstaffe, F.J., 2017. Stable isotope investigation of the migratory behavior of silver-haired bats (_Lasionycteris noctivagans_) in eastern North America. _Journal of Mammalogy_, 98(5), pp.1225-1235. |
+| /Lit_data/Pylant data.csv | Published data from Pylant, C.L., Nelson, D.M., Fitzpatrick, M.C., Gates, J.E. and Keller, S.R., 2016. Geographic origins and population genetics of bats killed at wind‐energy facilities. _Ecological Applications_, 26(5), pp.1381-1395. |
+| /Lit_data/Pylant_LABO_data.csv | Published data from Pylant, C.L., Nelson, D.M. and Keller, S.R., 2014. Stable hydrogen isotopes record the summering grounds of eastern red bats (_Lasiurus borealis_). _PeerJ_, 2, p.e629.|
+
