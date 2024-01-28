@@ -23,5 +23,5 @@ Scripts used to read and clean data, run analyses, plot figures.
 | 13_plotd2HHistogram.R                   | Plot histogram of adjusted d2H values (Figure S1) |
 | 14_plotSampleInventoryMap.R             | Plot sample acquisitions (Figure 2) |
 | 15_TableSummarizeTransferFunctions.R    | Generate data for table summarizing transfer functions |
-| 16_plotClusterOutputs.R                 | Make plots of trees and clusters with sample sizes (Figure S2 |
+| 16_plotClusterOutputs.R                 | Make plots of trees and clusters with sample sizes (Figure S2) |
 | 17_plotIsoscapeGlobe.R                  | Plot isoscape on globe used in conceptual figure (Fig 1) |
