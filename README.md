@@ -41,3 +41,11 @@ Data used in this study.
 | CASIF_BatMigratoryStructure_dat.csv | New stable hydrogen isotope measurements generated for this study. |
 | alldat.csv | Data used in this study after georeferencing, adjusting to unified reference scale |
 
+### /bin/
+Data products generated as part of this study. Shared here to increase reproducibility of scripts within the pipeline.
+| Script                                  | Description |
+| -----------                             | ----------- |
+| Fraserdata-georeferenced.csv            | georeferenced data from Fraser, E.E., Brooks, D. and Longstaffe, F.J., 2017. Stable isotope investigation of the migratory behavior of silver-haired bats (_Lasionycteris noctivagans_) in eastern North America. _Journal of Mammalogy_, 98(5), pp.1225-1235. |
+| NoAm_boundary_aea.rds | Summary object of the land mass of North America, from [gadm.org](https://gadm.org/data.html). |
+| my_isoscapes.RData | Candidate isoscapes used in this study, cropped to study extent |
+| range_raster.Rdata | Species ranges from IUCN used in this study, from IUCN Bat Specialist Team. |
