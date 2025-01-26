@@ -51,28 +51,3 @@ my_extent_aea <- raster::extent(
 
 # CRS for aea projection:
 myCRS <- "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs +towgs84=0,0,0"
-
-# Functions used in some analyses ---------
-
-# Quick fun to return params to include in the next model.
-topDredgeModelPredictors <- function(dredgeModelOutput) {
-  dredgeModelOutput %>%
-    # Find top-performing model
-    dplyr::filter(delta < 2) %>% arrange(df) %>% slice(1) %>% as.data.frame %>%
-    # Pull out predictors.
-    dplyr::select(-c("(Intercept)", "df", "AICc", "delta", "weight", "logLik")) %>%
-    # Make a df.
-    t %>% as.data.frame() ->
-    step1
-  print(paste0("Drop: ", row.names(dplyr::filter(step1, is.na(V1))) ) )
-  print(paste0("Keep: ", row.names(dplyr::filter(step1, !is.na(V1))) ) )
-}
-
-# Quick fun to return params with too-high VIF.
-dropVIF <- function(vifOUT) {
-  vifOUT %>%
-    as.data.frame %>%
-    dplyr::filter(`GVIF^(1/(2*Df))` >= 5) %>%
-    row.names() -> p
-  print(paste0("Consider dropping: ", p))
-}
