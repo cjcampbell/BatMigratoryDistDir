@@ -47,8 +47,16 @@ tab_sex <- bind_cols(
 gt::gtsave(tab_sex, filename = "out/tables/tab_sex.docx")
 
 # Age model -----
-tab_age <- makeModelTable(m_wind_isJ) %>%
+tab_age <-
+  bind_cols(
+    makeModelTable(m_wind_isJ_lano),
+    makeModelTable(m_wind_isJ_laci),
+    makeModelTable(m_wind_isJ_labo),
+    .name_repair = c( "unique")
+  ) %>%
   rename_all(~gsub("juvenile_", "", .)) %>%
+  dplyr::select(1, everything(), -"laci_Fixed Effect",- "labo_Fixed Effect") %>%
+  dplyr::rename(`Fixed Effect` = `lano_Fixed Effect`) %>%
   dplyr::mutate(
     `Fixed Effect` = case_when(
       `Fixed Effect` == "Intercept" ~ "Intercept (Adult)",
@@ -131,33 +139,6 @@ tab_dir_sex <- bind_cols(dir_n_results_sex, dir_s_results_sex) %>%
   fmt_number(columns = where(is.numeric), n_sigfig = 2) %>%
   gt_theme_538()
 gt::gtsave(tab_dir_sex, "out/tables/tab_dir_sex.docx")
-
-## Direction / age models ----
-dir_n_results_age <- bind_cols(
-  makeModelTable(m_dir_LANO_N_age),
-  makeModelTable(m_dir_LACI_N_age),
-  makeModelTable(m_dir_LABO_N_age),
-  .name_repair = c( "unique")
-) %>%
-  setNames(paste0('N_', names(.)))
-dir_s_results_age <- bind_cols(
-  makeModelTable(m_dir_LANO_S_age),
-  makeModelTable(m_dir_LACI_S_age),
-  makeModelTable(m_dir_LABO_S_age),
-  .name_repair = c( "unique")
-) %>%
-  setNames(paste0('S_', names(.)))
-
-tab_dir_age <- bind_cols(dir_n_results_age, dir_s_results_age) %>%
-  dplyr::select(1, everything(),  "S_lano_Fixed Effect",-contains("laci_Fixed Effect"),-contains("labo_Fixed Effect")) %>%
-  dplyr::rename(`Fixed Effect` = `N_lano_Fixed Effect`) %>%
-  gt %>%
-  tab_spanner_delim(delim = "_") %>%
-  fmt_number(columns = where(is.numeric), n_sigfig = 2) %>%
-  gt_theme_538()
-gt::gtsave(tab_dir_age, "out/tables/tab_dir_age.docx")
-
-
 
 # Wind models -------
 ## Main wind model (direction param) ----
