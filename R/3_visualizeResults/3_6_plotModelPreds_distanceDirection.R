@@ -6,7 +6,7 @@ library(tidybayes)
 library(lubridate)
 library(splines)
 library(patchwork)
-load("bin/modelFits_2025-01-14.RData")
+load("bin/modelFits.RData")
 theme_set(
   theme_classic() +
     theme(
@@ -52,8 +52,11 @@ monthBreaks2 <- list(
 predColor <- "grey50"
 # dircol1 <- "#00C2D1"
 # dircol2 <- "#C47AC0"
-dircol1 <- "#00CC99"
-dircol2 <- "#F374AE"
+# dircol1 <- "#00CC99"
+# dircol2 <- "#F374AE"
+dircol1 <- "#0FB8C4"
+dircol2 <- "#7FB069"
+
 dirCols <- list(
   scale_color_manual(
     "Direction of movement",
@@ -72,6 +75,11 @@ dirCols <- list(
 # Load plots -----
 ## sampling lat ----
 ### Model predictions ----
+pred_sam <- list(
+  data.frame(commonName = "Silver-haired", conditional_effects(m_dist_lano, effects = "decimalLatitude")[[1]]),
+  data.frame(commonName = "Hoary",         conditional_effects(m_dist_laci, effects = "decimalLatitude")[[1]]),
+  data.frame(commonName = "Eastern red",   conditional_effects(m_dist_labo, effects = "decimalLatitude")[[1]])
+) %>% bind_rows()
 p_dist_lat <- ggplot(pred_sam) +
   aes(x = decimalLatitude, y = estimate__, color = commonName, fill = commonName) +
   geom_ribbon(aes(ymin = `lower__`, ymax = `upper__`), alpha = 0.1, color = NA) +
@@ -128,6 +136,11 @@ p1_nolabs <- p1 +
 (p1_nolabs)
 ## summer origin ----
 ### Model prediction -----
+pred_orig <- list(
+  data.frame(commonName = "Silver-haired", conditional_effects(m_dist_lano, effects = "OriginCluster")[[1]]),
+  data.frame(commonName = "Hoary",         conditional_effects(m_dist_laci, effects = "OriginCluster")[[1]]),
+  data.frame(commonName = "Eastern red",   conditional_effects(m_dist_labo, effects = "OriginCluster")[[1]])
+) %>% bind_rows()
 p_dist_orig <- ggplot(pred_orig) +
   aes(x = OriginCluster, y = estimate__, color = commonName, fill = commonName) +
   geom_ribbon(aes(ymin = `lower__`, ymax = `upper__`), alpha = 0.1, color = NA) +
@@ -187,6 +200,20 @@ p2_nolabs <- p2 +
 
 # Direction ---------------------------------------------------------------
 ### Model predictions ----
+ce.dir.lano.s <- conditional_effects(m_dir_LANO_S)
+ce.dir.lano.n <- conditional_effects(m_dir_LANO_N)
+ce.dir.laci.s <- conditional_effects(m_dir_LACI_S)
+ce.dir.laci.n <- conditional_effects(m_dir_LACI_N)
+ce.dir.labo.s <- conditional_effects(m_dir_LABO_S)
+ce.dir.labo.n <- conditional_effects(m_dir_LABO_N)
+pred_dir <- list(
+  data.frame(commonName = "Silver-haired", dir = "S", ce.dir.lano.s[[1]]),
+  data.frame(commonName = "Hoary",         dir = "S", ce.dir.laci.s[[1]]),
+  data.frame(commonName = "Eastern red",   dir = "S", ce.dir.labo.s[[1]]),
+  data.frame(commonName = "Silver-haired", dir = "N", ce.dir.lano.n[[1]]),
+  data.frame(commonName = "Hoary",         dir = "N", ce.dir.laci.n[[1]]),
+  data.frame(commonName = "Eastern red",   dir = "N", ce.dir.labo.n[[1]])
+) %>% bind_rows()
 p_sppDirPlots <- lapply(mySpecies, function(spp) {
   pred_dir %>%
     dplyr::mutate(commonName = factor(commonName, levels= mySpecies)) %>%
@@ -252,6 +279,13 @@ p_dir_prediction <- df_pred_dir %>%
   ) +
   guides(linetype = "none")
 (p_dir_prediction)
+
+# Plot together
+p_dir_together <- {p_dir_prediction + theme(axis.title.x = element_blank()) } +
+  {p_sppDirPlots[[1]] + theme(axis.title = element_blank())} +
+  {p_sppDirPlots[[2]]} +
+  {p_sppDirPlots[[3]]+ theme(axis.title.y = element_blank())}
+
 
 # Estimate peaks and other summaries
 pred_dir %>%
@@ -431,3 +465,38 @@ bigCombo <-
 ggsave(bigCombo, filename = "out/figs/modelPredictions/bigCombo.png", width = 12, height = 6)
 ggsave(bigCombo, filename = "out/figs/modelPredictions/bigCombo.svg", width = 12, height = 6)
 
+## Combo, no inset -----
+
+topRow <-
+  {p_dist_orig} +
+  {p_dist_lat + theme(axis.title.y = element_blank()) } +
+  plot_layout(
+    guides = "collect",
+    design = "
+    1#2
+    ",
+    widths = c(1,0.2,1)
+
+      )
+
+bottomRow <-
+  {p_sppDirPlots[[1]]} +
+  {p_sppDirPlots[[2]] + theme(axis.title.y = element_blank())} +
+  {p_sppDirPlots[[3]] + theme(axis.title.y = element_blank())} +
+  plot_layout( guides = "collect", nrow = 1)
+
+bigCombo2 <-
+ topRow / bottomRow +
+  plot_layout(
+    guides = "collect",
+    design = "
+    1
+    #
+    2
+    ",
+    heights = c(1,0.1,1)
+    ) &
+  theme(legend.position='none')
+
+ggsave(bigCombo2, filename = "out/figs/modelPredictions/bigCombo2.png", width = 11*.9, height = 6*.9)
+ggsave(bigCombo2, filename = "out/figs/modelPredictions/bigCombo2.svg", width = 11*.9, height = 6*.9)

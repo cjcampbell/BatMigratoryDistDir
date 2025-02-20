@@ -15,7 +15,7 @@ library(versions)
 library(geosphere)
 library(lwgeom)
 library(tidyr)
-library(rgdal)
+# library(rgdal)
 library(boot)
 library(parallel)
 library(data.table)
@@ -29,8 +29,9 @@ wd$R       <- file.path( my_dir_path, "R" )
 wd$bin     <- file.path( my_dir_path, "bin" )
 wd$data    <- file.path( my_dir_path, "data" )
 wd$litdata <- file.path( my_dir_path, "data", "Lit_data")
-wd$iucn    <- file.path(IUCNlocationData) # This  is in a separate directory, referenced it in the .Rprofile file.
-wd$figs    <- file.path( my_dir_path, "figs" )
+# wd$iucn    <- file.path(IUCNlocationData) # This  is in a separate directory, referenced it in the .Rprofile file.
+wd$out     <- file.path( my_dir_path, "out" )
+wd$figs    <- file.path( wd$out, "figs" )
 
 # Check for presence of subdirectories. Create if needed.
 invisible({
@@ -51,3 +52,4 @@ my_extent_aea <- raster::extent(
 
 # CRS for aea projection:
 myCRS <- "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs +towgs84=0,0,0"
+

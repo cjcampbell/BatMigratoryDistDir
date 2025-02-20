@@ -15,11 +15,14 @@ df <- df %>%
     dist_km_adjusted = case_when(dist_km < 50 ~ 0, TRUE ~ dist_km),
     # Fix bug where 0's missing from 'N' and 'S' columns
     N = case_when(is.na(N) & S ==1 ~ 0, TRUE ~ N),
-    S = case_when(is.na(S) & N ==1 ~ 0, TRUE ~ S)
+    S = case_when(is.na(S) & N ==1 ~ 0, TRUE ~ S),
+    # Make factor of whether individual is known juvenile.
+    isJ = factor(case_when(Age == "J" ~ 1, TRUE ~ 0))
   )
 df_lano <- dplyr::filter(df, commonName == "Silver-haired", !is.na(yday2))
 df_laci <- dplyr::filter(df, commonName == "Hoary", !is.na(yday2))
 df_labo <- dplyr::filter(df, commonName == "Eastern red", !is.na(yday2))
+set.seed(42)
 
 # 1. Sex ID model -------
 
@@ -37,8 +40,8 @@ df_laci_sex <- dplyr::filter(df_laci, !is.na(Sex), wind_killed == "no")
 m_sex_laci <- brm(
   formula =
     Sex ~
-    OriginCluster +
-    decimalLatitude*poly(yday2,2) ,
+    OriginCluster + # summer latitude
+    decimalLatitude*poly(yday2,2) , # sampling latitude * day of year (start at day 150)
   data = df_laci_sex,
   family = bernoulli(),
   cores = 8,
@@ -48,6 +51,7 @@ m_sex_laci <- brm(
   threads = threading(8),
   backend = "cmdstanr"
 )
+summary(m_sex_laci)
 conditional_effects(m_sex_laci, effects = "yday2", conditions = data.frame(decimalLatitude = c(20, 30, 40, 50)))
 conditional_effects(m_sex_laci, effects = "OriginCluster")
 
@@ -57,15 +61,16 @@ pp_check(m_sex_laci, type = "stat", stat = "mean")
 ## LANO ----
 df_lano_sex <- dplyr::filter(df_lano, !is.na(Sex), wind_killed == "no")
 m_sex_lano <- update(m_sex_laci, newdata = df_lano_sex)
+summary(m_sex_lano)
 conditional_effects(m_sex_lano) %>% plot(ask = F)
 conditional_effects(m_sex_lano, effects = "yday2", conditions = data.frame(decimalLatitude = c(20, 30, 40, 50)))
-
 pp_check(m_sex_lano)
 pp_check(m_sex_lano, type = "stat", stat = "mean")
 
 ## LABO ----
 df_labo_sex <- dplyr::filter(df_labo, !is.na(Sex), wind_killed == "no")
 m_sex_labo <- update(m_sex_laci,  newdata = df_labo_sex )
+summary(m_sex_labo)
 conditional_effects(m_sex_labo) %>% plot(ask = F)
 conditional_effects(m_sex_labo, effects = "yday2", conditions = data.frame(decimalLatitude = c(20, 30, 40, 50)))
 
@@ -108,7 +113,7 @@ conditional_effects(m_laci_dist_hurdlegamma,
 m_lano_dist_hurdlegamma   <- update(m_laci_dist_hurdlegamma, newdata = df_lano)
 m_lano_dist_hurdlelognorm <- update(m_laci_dist_hurdlelognorm, newdata = df_lano)
 
-loo_lano_dist_hurdlegamma   <- loo(m_lano_dist_hurdlegamma)
+loo_lano_dist_hurdlegamma   <- loo(m_lano_dist_hurdlegamma, moment_match = T)
 loo_lano_dist_hurdlelognorm <- loo(m_lano_dist_hurdlelognorm)
 
 loo_compare(loo_lano_dist_hurdlegamma, loo_lano_dist_hurdlelognorm )
@@ -125,7 +130,7 @@ loo_compare(loo_labo_dist_hurdlegamma, loo_labo_dist_hurdlelognorm )
 
 
 #### Bring in informative priors for LABO -----
-# Because of weaker temporal sampling coverage for this species, also bring in informative priors from the laci models.
+# Because of weaker temporal sampling coverage for this species, also bring in informative priors from the laci models for day of year.
 mLaci_mod_sum1 <- summary(m_laci_dist_hurdlegamma)$fixed
 mLaci_mod_sum1 <- mLaci_mod_sum1[grep("polyyday", rownames(mLaci_mod_sum1)), 1:2]
 
@@ -146,8 +151,6 @@ conditional_effects(
   effects = c("yday2", "OriginCluster")) %>% plot(ask = F)
 
 ### Select final models -------
-# Note that there's still something interesting in LACI model containing interaction term,
-# but not enough to justify retaining for all species. Drop for now.
 
 m_dist_laci <- m_laci_dist_hurdlegamma
 m_dist_lano <- m_lano_dist_hurdlegamma
@@ -156,7 +159,7 @@ m_dist_labo <- m_labo_dist_hurdlegamma2
 pp_check(m_dist_laci)
 pp_check(m_dist_laci, type = "stat", stat = "mean")
 pp_check(m_dist_lano)
-pp_check(m_dist_lano, type = "stat", stat = "mean")
+pp_check(m_dist_lano, type = "stat", stat = "mean") # not the best.
 pp_check(m_dist_labo)
 pp_check(m_dist_labo, type = "stat", stat = "mean")
 
@@ -172,7 +175,7 @@ m_dir_LACI_S <- update( m_dist_laci,
                         family = bernoulli(),
 )
 m_dir_LACI_S
-
+summary(m_dir_LACI_S)
 pp_check(m_dir_LACI_S)
 pp_check(m_dir_LACI_S, type = "stat", stat = "mean")
 
@@ -188,7 +191,7 @@ pp_check(m_dir_LACI_N, type = "stat", stat = "mean")
 
 
 ## LABO ----
-# Add informative priors from LACI model.
+# Add informative priors from LACI model for day of year.
 prs <- summary(m_dir_LACI_S)$fixed
 prs <- prs[grep("polyyDay2", rownames(prs)), ]
 
@@ -206,11 +209,6 @@ m_dir_LABO_S
 prs2 <- summary(m_dir_LACI_N)$fixed
 prs2 <- prs2[grep("polyyDay2", rownames(prs2)), ]
 
-m_dir_LABO_N0 <- update(
-  m_dir_LACI_N,
-  newdata = df_labo
-)
-summary(m_dir_LABO_N0)$fixed
 m_dir_LABO_N <- update(
   m_dir_LACI_N,
   newdata = df_labo,
@@ -219,6 +217,7 @@ m_dir_LABO_N <- update(
     prior_string(paste0("normal(", prs2[2,1],",",  prs2[2,2], ")"), coef = rownames(prs2)[2])
   )
 )
+m_dir_LABO_N
 summary(m_dir_LABO_N)$fixed
 pp_check(m_dir_LABO_S)
 pp_check(m_dir_LABO_S, type = "stat", stat = "mean")
@@ -240,7 +239,7 @@ pp_check(m_dir_LANO_N)
 pp_check(m_dir_LANO_N, type = "stat", stat = "mean")
 
 
-## Direction x Sex -------
+## 3b. Direction x Sex -------
 
 df %>%
   count(commonName, wind_killed, Sex) %>%
@@ -264,8 +263,17 @@ conditional_effects(m_dir_LANO_S_sex) %>% plot(ask = F)
 pp_check(m_dir_LANO_S_sex)
 pp_check(m_dir_LANO_S_sex, type = "stat", stat = "mean")
 
-# TODO Add priors
-m_dir_LABO_S_sex <- update( m_dir_LACI_S_sex, newdata = df_labo_sex)
+# Add priors
+prs_dirsex <- summary(m_dir_LACI_S_sex)$fixed
+prs_dirsex <- prs_dirsex[grep("polyyDay2", rownames(prs_dirsex)), ]
+
+m_dir_LABO_S_sex <- update(
+  m_dir_LACI_S_sex,
+  newdata = df_labo_sex,
+  prior = c(
+    prior_string(paste0("normal(", prs_dirsex[1,1],",",  prs_dirsex[1,2], ")"), coef = rownames(prs_dirsex)[1]),
+    prior_string(paste0("normal(", prs_dirsex[2,1],",",  prs_dirsex[2,2], ")"), coef = rownames(prs_dirsex)[2])
+  ))
 conditional_effects(m_dir_LABO_S_sex) %>% plot(ask = F)
 pp_check(m_dir_LABO_S_sex)
 pp_check(m_dir_LABO_S_sex, type = "stat", stat = "mean")
@@ -285,12 +293,22 @@ conditional_effects(m_dir_LANO_N_sex) %>% plot(ask = F)
 pp_check(m_dir_LANO_N_sex)
 pp_check(m_dir_LANO_N_sex, type = "stat", stat = "mean")
 
-m_dir_LABO_N_sex <- update( m_dir_LACI_N_sex, newdata = df_labo_sex)
+
+prs_dirsex2 <- summary(m_dir_LACI_N_sex)$fixed
+prs_dirsex2 <- prs_dirsex[grep("polyyDay2", rownames(prs_dirsex2)), ]
+
+m_dir_LABO_N_sex <- update(
+  m_dir_LACI_N_sex,
+  newdata = df_labo_sex,
+  prior = c(
+    prior_string(paste0("normal(", prs_dirsex2[1,1],",",  prs_dirsex2[1,2], ")"), coef = rownames(prs_dirsex2)[1]),
+    prior_string(paste0("normal(", prs_dirsex2[2,1],",",  prs_dirsex2[2,2], ")"), coef = rownames(prs_dirsex2)[2])
+  ))
 conditional_effects(m_dir_LABO_N_sex) %>% plot(ask = F)
 pp_check(m_dir_LABO_N_sex)
 pp_check(m_dir_LABO_N_sex, type = "stat", stat = "mean")
 
-## Direction x Age ------
+## 3c. Direction x Age exploration ------
 df %>% dplyr::mutate(hasAge = !is.na(Age)) %>% count(hasAge)
 
 df %>%
@@ -330,145 +348,96 @@ df %>%
   count(commonName, Age) %>%
   dplyr::mutate(prop = signif(n/sum(n)*100, 2), .by = commonName)
 
+ggplot(df) +
+  geom_histogram(aes(x = yday2, group = isJ, fill = isJ)) +
+  facet_wrap(dir~commonName)
 
 # 4. Wind model ------
-## With categorical direction -----
-m_wind_laci_1 <- update(
-  m_sex_laci,
-  formula =
-    wind_killed ~
-    dir +
-    OriginCluster +
-    poly(yDay, 2),
-  newdata = df_laci,
-  prior = c(
-    prior(normal(0,2), class = b)
-  )
-)
-get_prior(m_wind_laci_1)
-m_wind_laci_1
-pp_check(m_wind_laci_1)
-pp_check(m_wind_laci_1, type = "stat", stat = "mean")
+## Primary wind model with categorical definition for direction -----
 
+df %>%
+  ggplot() +
+  geom_bar(aes(x = wind_killed,  fill = dir )) +
+  facet_wrap(~commonName)
 
-### LABO -----
-# With priors for date:
-prs3 <- summary(m_wind_laci_1)$fixed
-prs3 <- prs3[grep("polyyDay2", rownames(prs3)), ]
+df %>%
+  ggplot() +
+  geom_boxplot(aes(y = wind_killed,  x = dist_km_adjusted )) +
+  facet_wrap(~commonName) +
+  scale_x_log10()
 
-m_wind_labo_1 <- update(
-  m_wind_laci_1,
-  prior = c(
-    prior(normal(0,2), class = b),
-    prior_string(paste0("normal(", prs3[1,1], ", ", prs3[1,2], ")"), coef = rownames(prs3)[1]),
-    prior_string(paste0("normal(", prs3[2,1], ", ", prs3[2,2], ")"), coef = rownames(prs3)[2])
-  ),
-  newdata = df_labo
-)
-
-pp_check(m_wind_labo_1)
-pp_check(m_wind_labo_1, type = "stat", stat = "mean")
-
-
-### LANO -----
-m_wind_lano_1 <- update(
-  m_wind_labo_1,
-  newdata = df_lano
-)
-pp_check(m_wind_lano_1)
-pp_check(m_wind_lano_1, type = "stat", stat = "mean")
-
-
-
-## With distance and direction as continuous predictors ----
-# Exploratory models with different parameters (dir is specified using N, S, and dist_km)
-### laci -----
-m_wind_dist_laci <- update(
-  m_wind_laci_1,
-  formula =
-    wind_killed ~
-    poly(N,2) +
-    poly(S,2) +
-    dist_km +
-    OriginCluster +
-    poly(yDay, 2),
-  newdata = df_laci,
-)
-conditional_effects(m_wind_dist_laci) %>% plot(ask = F)
-
-pp_check(m_wind_dist_laci)
-pp_check(m_wind_dist_laci, type = "stat", stat = "mean")
-
-
-### labo ----
-# Include priors for day of year from laci model
-mm <- summary(m_wind_dist_laci)$fixed
-mm <- mm[grep("polyyDay", rownames(mm)), 1:2]
-
-m_wind_dist_labo <- update(
-  m_wind_dist_laci,
-  newdata = df_labo,
-  prior = c(
-    prior_string(paste0("normal(", mm[1,1], ", ", mm[1,2], ")"), coef = rownames(mm)[1]),
-    prior_string(paste0("normal(", mm[2,1], ", ", mm[2,2], ")"), coef = rownames(mm)[2])
-  )
-)
-conditional_effects(m_wind_dist_labo) %>% plot(ask = F)
-pp_check(m_wind_dist_labo)
-pp_check(m_wind_dist_labo, type = "stat", stat = "mean")
-
-
-### lano ----
-m_wind_dist_lano <- update( m_wind_dist_laci, newdata = df_lano)
-conditional_effects(m_wind_dist_lano) %>% plot(ask = F)
-
-pp_check(m_wind_dist_lano)
-pp_check(m_wind_dist_lano, type = "stat", stat = "mean")
-
-
-## With distance and direction -------
-### laci ---
-m_wind_distDir_laci <- update(
-  m_wind_laci_1,
+### LACI -----
+m_wind_distDir_laci_cat_dir <- update(
+  m_dir_LACI_S,
   formula =
     wind_killed ~
     dir +
     dist_km +
-    OriginCluster +
-    poly(yDay, 2),
+    OriginCluster,
   newdata = df_laci
 )
-conditional_effects(m_wind_distDir_laci) %>% plot(ask = F)
+m_wind_distDir_laci_cat_dir
+pp_check(m_wind_distDir_laci_cat_dir)
+conditional_effects(m_wind_distDir_laci_cat_dir)
+conditional_effects(m_wind_distDir_laci_cat_dir, effects = "dir")
+conditional_effects(m_wind_distDir_laci_cat_dir, effects = "dist_km")
 
-pp_check(m_wind_distDir_laci)
-pp_check(m_wind_distDir_laci, type = "stat", stat = "mean")
-
-### lano -----
-m_wind_distDir_lano <- update(m_wind_distDir_laci, newdata = df_lano)
-conditional_effects(m_wind_distDir_lano) %>% plot(ask = F)
-
-pp_check(m_wind_distDir_lano)
-pp_check(m_wind_distDir_lano, type = "stat", stat = "mean")
-
-### labo ----
-mm3 <- summary(m_wind_distDir_laci)$fixed
-mm3 <- mm[grep("polyyDay", rownames(mm)), 1:2]
-
-m_wind_distDir_labo <- update(
-  m_wind_distDir_laci,
-  newdata = df_labo,
-  prior = c(
-    prior_string(paste0("normal(", mm3[1,1], ", ", mm3[1,2], ")"), coef = rownames(mm3)[1]),
-    prior_string(paste0("normal(", mm3[2,1], ", ", mm3[2,2], ")"), coef = rownames(mm3)[2])
-  )
+### LABO -----
+m_wind_distDir_labo_cat_dir <- update(
+  m_wind_distDir_laci_cat_dir,
+  newdata = df_labo
 )
-conditional_effects(m_wind_distDir_labo)
-pp_check(m_wind_distDir_labo)
-pp_check(m_wind_distDir_labo, type = "stat", stat = "mean")
+m_wind_distDir_labo_cat_dir
+pp_check(m_wind_distDir_labo_cat_dir)
+conditional_effects(m_wind_distDir_labo_cat_dir)
+
+### LANO -----
+m_wind_distDir_lano_cat_dir <- update(
+  m_wind_distDir_laci_cat_dir,
+  newdata = df_lano
+)
+m_wind_distDir_lano_cat_dir
+pp_check(m_wind_distDir_lano_cat_dir)
+conditional_effects(m_wind_distDir_lano_cat_dir)
+
+## Alternate model -------
+## Continuous variables for direction instead.
+
+m_wind_distDir_laci_cat_dir_cont <- update(
+  m_wind_distDir_laci_cat_dir,
+  formula =
+    wind_killed ~
+    S +
+    dist_km +
+    OriginCluster,
+  newdata = df_laci
+)
+m_wind_distDir_laci_cat_dir_cont
+pp_check(m_wind_distDir_laci_cat_dir_cont)
+conditional_effects(m_wind_distDir_laci_cat_dir_cont)
 
 
-## Age model ----
+m_wind_distDir_labo_cat_dir_cont <- update(
+  m_wind_distDir_laci_cat_dir_cont,
+  newdata = df_labo
+)
+m_wind_distDir_labo_cat_dir_cont
+pp_check(m_wind_distDir_labo_cat_dir_cont)
+conditional_effects(m_wind_distDir_labo_cat_dir_cont)
+
+
+m_wind_distDir_lano_cat_dir_cont <- update(
+  m_wind_distDir_laci_cat_dir_cont,
+  newdata = df_lano
+)
+m_wind_distDir_lano_cat_dir_cont
+pp_check(m_wind_distDir_lano_cat_dir_cont)
+conditional_effects(m_wind_distDir_lano_cat_dir_cont)
+
+
+## Age exploration ----
 # Are juveniles more likely to be killed @ turbines, accounting for doy effects?
+# Doy and turbine date are so correlated, hard to disentangle.
 
 df %>% count(commonName, wind_killed, Age)
 
@@ -489,61 +458,18 @@ ggplot(df_juvenile) +
   geom_histogram(aes(x = yday2, group = isJ, fill = isJ)) +
   facet_wrap(~commonName)
 
-# Break out by species.
-df_juvenile_laci <- dplyr::filter(df_juvenile, commonName == "Hoary")
-m_wind_isJ_laci <- update(
-  m_wind_laci_1,
-  formula = wind_killed ~ isJ +ns(yDay, df = 4),
-  newdata = df_juvenile_laci)
-conditional_effects(m_wind_isJ_laci, effect = "isJ") %>% plot(ask = F)
-pp_check(m_wind_isJ_laci)
-pp_check(m_wind_isJ_laci, type = "stat", stat = "mean")
 
+## Sex exploration -----
 
-df_juvenile_lano <- dplyr::filter(df_juvenile, commonName == "Silver-haired")
-m_wind_isJ_lano <- update(m_wind_isJ_laci, newdata = df_juvenile_lano)
-conditional_effects(m_wind_isJ_lano, effect = "isJ") %>% plot(ask = F)
-pp_check(m_wind_isJ_lano)
-pp_check(m_wind_isJ_lano, type = "stat", stat = "mean")
+df %>%
+  dplyr::filter(wind_killed == "no", !is.na(Sex)) %>%
+  count(commonName, wind_killed, Sex)
 
-df_juvenile_labo <- dplyr::filter(df_juvenile, commonName == "Eastern red")
-m_wind_isJ_labo <- update(m_wind_isJ_laci, newdata = df_juvenile_labo)
-conditional_effects(m_wind_isJ_labo, effect = "isJ") %>% plot(ask = F)
-pp_check(m_wind_isJ_labo)
-pp_check(m_wind_isJ_labo, type = "stat", stat = "mean")
+df %>%
+  dplyr::filter(!is.na(Sex)) %>%
+  ggplot() +
+  geom_bar(aes(fill = Sex, x = wind_killed))
 
-## Sex model -----
-
-m_wind_sex_LACI <- update(
-  m_wind_laci_1,
-  formula = wind_killed ~ Sex + OriginCluster,
-  newdata = df_laci_sex,
-  adapt_delta = 0.95
-)
-conditional_effects(m_wind_sex_LACI) %>% plot(ask = F)
-pp_check(m_wind_sex_LACI)
-pp_check(m_wind_sex_LACI, type = "stat", stat = "mean")
-
-
-m_wind_sex_LANO <- update(
-  m_wind_laci_1,
-  formula = wind_killed ~ Sex + OriginCluster,
-  newdata = df_lano_sex,
-  adapt_delta = 0.9
-)
-conditional_effects(m_wind_sex_LANO) %>% plot(ask = F)
-pp_check(m_wind_sex_LANO)
-pp_check(m_wind_sex_LANO, type = "stat", stat = "mean")
-
-m_wind_sex_LABO <- update(
-  m_wind_laci_1,
-  formula = wind_killed ~ Sex + OriginCluster,
-  newdata = df_labo_sex,
-  adapt_delta = 0.9
-)
-conditional_effects(m_wind_sex_LABO) %>% plot(ask = F)
-pp_check(m_wind_sex_LABO)
-pp_check(m_wind_sex_LABO, type = "stat", stat = "mean")
 
 # Save ----
 save.image(file = paste0("bin/modelFits_", Sys.Date(),".RData"))
