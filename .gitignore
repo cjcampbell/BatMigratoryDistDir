@@ -18,7 +18,7 @@ data/iucn*
 data/assignR*
 data/*
 !data/alldat.csv
-figs/*
+out/figs/*
 docs/*
 R-archive/*
 R_testing
