@@ -1,10 +1,10 @@
 
+library(ggpubr)
 # Plot histogram of d2H values.
 
-mydata_transformed <- readRDS( file.path(wd$bin, "mydata_transformed.rds") )
-library(ggpubr)
+df <- readRDS(file.path(wd$bin, "mydata_minDistDir.rds"))
 
-p <- mydata_transformed %>%
+p <- df %>%
   dplyr::mutate(commonName = case_when(Species == "LACI"~ "Hoary", Species == "LABO" ~ "Eastern red", Species == "LANO" ~ "Silver-haired")) %>%
   dplyr::mutate( commonName = factor(commonName, levels = c("Silver-haired", "Hoary", "Eastern red")) ) %>%
   ggplot(aes(d2H)) +

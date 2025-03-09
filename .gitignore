@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
 bin/*
 !bin/Fraserdata-georeferenced.csv
 !bin/NoAm_boundary_aea.rds
@@ -17,8 +18,9 @@ data/iucn*
 data/assignR*
 data/*
 !data/alldat.csv
-figs/*
+out/figs/*
 docs/*
+R-archive/*
 R_testing
 .Rprofile
 R_internal/*
