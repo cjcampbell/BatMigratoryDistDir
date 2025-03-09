@@ -309,7 +309,9 @@ pp_check(m_dir_LABO_N_sex)
 pp_check(m_dir_LABO_N_sex, type = "stat", stat = "mean")
 
 ## 3c. Direction x Age exploration ------
-df %>% dplyr::mutate(hasAge = !is.na(Age)) %>% count(hasAge)
+df %>%
+  dplyr::mutate(hasAge = !is.na(Age)) %>%
+  count(hasAge)
 
 df %>%
   count(commonName, dir, Age) %>%
@@ -434,41 +436,6 @@ m_wind_distDir_lano_cat_dir_cont
 pp_check(m_wind_distDir_lano_cat_dir_cont)
 conditional_effects(m_wind_distDir_lano_cat_dir_cont)
 
-
-## Age exploration ----
-# Are juveniles more likely to be killed @ turbines, accounting for doy effects?
-# Doy and turbine date are so correlated, hard to disentangle.
-
-df %>% count(commonName, wind_killed, Age)
-
-df %>%
-  count(commonName, wind_killed, Age) %>%
-  ggplot() +
-  geom_col(aes(x=wind_killed, y = n, fill = Age), position = "stack") +
-  facet_wrap(~commonName)
-
-df_juvenile <- df %>%
-  dplyr::filter(!is.na(Age)) %>%
-  dplyr::mutate(isJ = factor(case_when(Age == "J" ~ 1, TRUE ~ 0)))
-
-ggplot(df_juvenile) +
-  geom_histogram(aes(x = yday2, group = isJ, fill = isJ))
-
-ggplot(df_juvenile) +
-  geom_histogram(aes(x = yday2, group = isJ, fill = isJ)) +
-  facet_wrap(~commonName)
-
-
-## Sex exploration -----
-
-df %>%
-  dplyr::filter(wind_killed == "no", !is.na(Sex)) %>%
-  count(commonName, wind_killed, Sex)
-
-df %>%
-  dplyr::filter(!is.na(Sex)) %>%
-  ggplot() +
-  geom_bar(aes(fill = Sex, x = wind_killed))
 
 
 # Save ----

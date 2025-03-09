@@ -159,6 +159,12 @@ tab_wind %>%
   gt::gtsave("out/tables/table_wind_sci.docx")
 
 
+# Get 50% CIs:
+posterior_summary(m_wind_distDir_lano_cat_dir, probs = c(.25, .95)) %>% signif(2)
+posterior_summary(m_wind_distDir_laci_cat_dir, probs = c(.25, .95)) %>% signif(2)
+posterior_summary(m_wind_distDir_labo_cat_dir, probs = c(.25, .95)) %>% signif(2)
+
+
 ## Alt wind model (direction continuous, includes distance) -----
 
 tab_wind_alt <- bind_cols(
@@ -201,41 +207,12 @@ m_dir_LANO_S_sex$formula
 m_dir_LANO_S_sex$family
 
 # Wind -- discrete direction only
-m_wind_laci_1$formula
-m_wind_laci_1$family
+m_wind_distDir_lano_cat_dir$formula
+m_wind_distDir_lano_cat_dir$family
 
-# Wind -- contunous distance and direction model
-m_wind_dist_laci$formula
-m_wind_dist_laci$family
-
-# Wind -- with distance and discrete direction
-m_wind_distDir_laci$formula
-m_wind_distDir_laci$family
+# Wind -- continous distance and direction model
+m_wind_distDir_lano_cat_dir_cont$formula
+m_wind_distDir_lano_cat_dir_cont$family
 
 
-
-# Age model -----
-tab_age <-
-  bind_cols(
-    makeModelTable(m_wind_isJ_lano),
-    makeModelTable(m_wind_isJ_laci),
-    makeModelTable(m_wind_isJ_labo),
-    .name_repair = c( "unique")
-  ) %>%
-  rename_all(~gsub("juvenile_", "", .)) %>%
-  dplyr::select(1, everything(), -"laci_Fixed Effect",- "labo_Fixed Effect") %>%
-  dplyr::rename(`Fixed Effect` = `lano_Fixed Effect`) %>%
-  dplyr::mutate(
-    `Fixed Effect` = case_when(
-      `Fixed Effect` == "Intercept" ~ "Intercept (Adult)",
-      `Fixed Effect` == "isJ1" ~ "Juvenile",
-      TRUE ~`Fixed Effect`
-      )
-  ) %>%
-  gt %>%
-  tab_spanner_delim(delim = "_") %>%
-  fmt_number(columns = where(is.numeric), n_sigfig = 2) %>%
-  gt_theme_538()
-
-gt::gtsave(tab_age, "out/tables/tab_wind_age.docx")
 

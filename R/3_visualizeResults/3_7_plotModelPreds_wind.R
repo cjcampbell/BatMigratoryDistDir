@@ -32,25 +32,6 @@ firstsOfMonths1 <- ymd(paste( 2024, 1:12, 1, sep = "-")) %>%
 firstsOfMonths <- c(firstsOfMonths1, firstsOfMonths1 + 365)
 monthDeets <- data.frame(yday = firstsOfMonths, month = month.abb[1:12], ydayLab = firstsOfMonths1)
 
-monthBreaks1 <- list(
-  scale_x_continuous(
-    "Month\n(ordinal day of year, start Jan 1)",
-    breaks = monthDeets$yday[1:12],
-    labels = paste0(monthDeets$month, "\n",  monthDeets$ydayLab)[1:12],
-    expand = c(0,0)
-  )
-)
-monthBreaks2 <- list(
-  scale_x_continuous(
-    "Month",
-    breaks = monthDeets$yday[1:12],
-    labels = 1:12,
-    expand = c(0,0),
-    limits = c(1,365)
-  )
-)
-
-
 dircol1 <- "#0FB8C4"
 dircol2 <- "#7FB069"
 dircolU <- "grey50"
@@ -339,10 +320,5 @@ ggsave(p_wind_age_count, filename = file.path("out", "figs", "p_wind_age_count.p
 
 df %>%
   dplyr::filter(wind_killed == "no", !is.na(Sex)) %>%
-  count(commonName, wind_killed, Sex)
-
-df %>%
-  dplyr::filter(!is.na(Sex)) %>%
-  ggplot() +
-  geom_bar(aes(fill = Sex, x = wind_killed))
+  count(commonName, dir, Sex)
 

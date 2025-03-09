@@ -141,4 +141,3 @@ p_age_dataHistogram <- df_juvenile %>%
   )
 ggsave(p_age_dataHistogram, filename = file.path("out/figs/p_age_dataHistogram.png"), width = 12, height = 4)
 
-
