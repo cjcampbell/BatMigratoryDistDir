@@ -5,6 +5,7 @@ Data and code used in analyses associated with _Unusual migratory strategy a key
 ## Repository contents
 ### /R/
 Scripts used to read and clean data, run analyses, plot figures.
+
 | Script                                                                    | Description |
 | -----------                                                               | ----------- |
 00_Setup.R                                                                  | Load libraries, functions, set navigation objects |
