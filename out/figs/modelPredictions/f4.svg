@@ -6,9 +6,9 @@
    viewBox="0 0 720.83333 440.84166"
    version="1.1"
    id="svg154"
-   sodipodi:docname="f4_annotated_tidy.svg"
+   sodipodi:docname="f4.svg"
    inkscape:version="1.3.2 (091e20e, 2023-11-25)"
-   inkscape:export-filename="f4_resized.png"
+   inkscape:export-filename="f4.png"
    inkscape:export-xdpi="600"
    inkscape:export-ydpi="600"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -25,15 +25,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="pt"
-     inkscape:zoom="0.98871114"
-     inkscape:cx="392.9358"
-     inkscape:cy="193.18079"
-     inkscape:window-width="1728"
-     inkscape:window-height="1051"
+     inkscape:zoom="1.2465228"
+     inkscape:cx="227.43266"
+     inkscape:cy="186.91997"
+     inkscape:window-width="1688"
+     inkscape:window-height="957"
      inkscape:window-x="0"
-     inkscape:window-y="38"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="g1-1-1-4"
+     inkscape:window-y="758"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg154"
      inkscape:export-bgcolor="#ffffff00" />
   <defs
      id="defs1">
@@ -1266,7 +1266,7 @@
        y="219.04829">(c)</tspan></text>
   <g
      id="g290"
-     transform="matrix(1,0,0,0.99707162,82.996739,-22.082153)"
+     transform="matrix(1,0,0,0.99707162,109.45507,-22.082153)"
      style="stroke-width:1.00147">
     <rect
        style="fill:#80b068;fill-opacity:0.882353;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none"
@@ -1284,14 +1284,14 @@
        transform="matrix(0.99649642,0,0,1.0035159,-287.24616,63.799169)"><tspan
          x="775.70728"
          y="371.55923"
-         id="tspan4">Movement from summer </tspan><tspan
+         id="tspan1">Movement from summer </tspan><tspan
          x="775.70728"
          y="384.05924"
-         id="tspan5">habitat to higher latitude</tspan></text>
+         id="tspan2">habitat to higher latitude</tspan></text>
   </g>
   <g
      id="g289"
-     transform="matrix(1,0,0,0.99820215,108.66511,-29.035151)"
+     transform="matrix(1,0,0,0.99820215,135.12343,-29.035151)"
      style="stroke-width:1.0009">
     <rect
        style="fill:#0fb7c3;fill-opacity:0.933333;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none"
@@ -1309,10 +1309,10 @@
        transform="matrix(0.99649642,0,0,1.0035159,-462.74207,70.278407)"><tspan
          x="775.70728"
          y="371.55923"
-         id="tspan6">Movement from summer </tspan><tspan
+         id="tspan3">Movement from summer </tspan><tspan
          x="775.70728"
          y="384.05924"
-         id="tspan7">habitat to lower latitude</tspan></text>
+         id="tspan4">habitat to lower latitude</tspan></text>
   </g>
   <text
      xml:space="preserve"
@@ -1338,7 +1338,7 @@
        y="219.04829">(e)</tspan></text>
   <g
      id="g287"
-     transform="translate(41.935256,-23.332228)">
+     transform="translate(33.115812,-23.332228)">
     <rect
        style="fill:#e3ab56;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none"
        id="rect285-2-8-40"
@@ -1361,7 +1361,7 @@
   </g>
   <g
      id="g288"
-     transform="translate(42.293056,-23.332228)">
+     transform="translate(33.473612,-23.332228)">
     <rect
        style="fill:#a43828;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none"
        id="rect285-2-8-4-0"
@@ -1384,7 +1384,7 @@
   </g>
   <g
      id="g286"
-     transform="translate(42.293056,-23.332228)">
+     transform="translate(33.473612,-23.332228)">
     <rect
        style="fill:#335c67;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none"
        id="rect285-2-8-4-1-1"
@@ -1418,7 +1418,7 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="775.70728"
          y="371.55923"
-         id="tspan8">Sampling latitude (degrees)</tspan></text>
+         id="tspan5">Sampling latitude (degrees)</tspan></text>
   </g>
   <g
      id="g1-1-1"
@@ -1433,7 +1433,7 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="775.70728"
          y="371.55923"
-         id="tspan9">Summer latitude</tspan></text>
+         id="tspan6">Summer latitude</tspan></text>
   </g>
   <g
      id="g1-1-1-4"
@@ -1448,11 +1448,11 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="864.716"
          y="371.55923"
-         id="tspan10">Minimimum distance traveled
+         id="tspan7">Minimimum distance traveled
 </tspan><tspan
          x="864.716"
          y="382.56916"
-         id="tspan11">from summer habitat (km)</tspan></text>
+         id="tspan8">from summer habitat (km)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:13.7624px;line-height:0.8;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:206.859;display:inline;fill:#0c0c0c;fill-opacity:1;stroke-width:0.750675"
@@ -1463,7 +1463,7 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="864.716"
          y="371.55923"
-         id="tspan12">Month</tspan></text>
+         id="tspan9">Month</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:13.7624px;line-height:0.8;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:206.859;display:inline;fill:#0c0c0c;fill-opacity:1;stroke-width:0.750675"
@@ -1474,7 +1474,7 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="864.716"
          y="371.55923"
-         id="tspan13">Month</tspan></text>
+         id="tspan10">Month</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:13.7624px;line-height:0.8;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:206.859;display:inline;fill:#0c0c0c;fill-opacity:1;stroke-width:0.750675"
@@ -1485,7 +1485,7 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="864.716"
          y="371.55923"
-         id="tspan14">Month</tspan></text>
+         id="tspan11">Month</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:13.7624px;line-height:0.8;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:206.859;display:inline;fill:#0c0c0c;fill-opacity:1;stroke-width:0.750675"
@@ -1496,11 +1496,11 @@
        inkscape:label="text286-7-8-1-8-5-7-1-2"><tspan
          x="864.716"
          y="371.55923"
-         id="tspan15">Probability of movement in<tspan
+         id="tspan12">Probability of movement in<tspan
    y="371.55923"
-   id="tspan16"> </tspan></tspan><tspan
+   id="tspan13"> </tspan></tspan><tspan
          x="864.716"
          y="382.56916"
-         id="tspan17">indicated direction</tspan></text>
+         id="tspan14">indicated direction</tspan></text>
   </g>
 </svg>
