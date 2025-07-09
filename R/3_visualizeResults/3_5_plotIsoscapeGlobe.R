@@ -3,7 +3,7 @@
 
 library(rnaturalearth)
 library(sf)
-source("~/BatMigratoryDistDir/R/00_Setup.R")
+source("0_setup/0_1_setup.R")
 
 world <- rnaturalearth::countries110 %>%
   st_as_sf()

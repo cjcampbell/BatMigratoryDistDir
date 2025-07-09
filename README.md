@@ -8,7 +8,7 @@ Scripts used to read and clean data, run analyses, plot figures.
 
 | Script                                                                    | Description |
 | -----------                                                               | ----------- |
-00_Setup.R                                                                  | Load libraries, functions, set navigation objects |
+| 0_setup/0_1_setup.R                                                         | Load libraries, functions, set navigation objects |
 | 1_generateMapsAndMovementMetrics/1_1_LoadDeuteriumData.R                  | Load data used in this study |
 | 1_generateMapsAndMovementMetrics/1_2_LoadSpatialData.R                    | Load spatial data used in subsequent analyses (e.g., isoscapes, GADM boundaries, IUCN rangemaps) |
 | 1_generateMapsAndMovementMetrics/1_3_getIsoscapeValuesAtSampleSites.R     | Prepare to fit transfer functions |
@@ -17,7 +17,7 @@ Scripts used to read and clean data, run analyses, plot figures.
 | 1_generateMapsAndMovementMetrics/1_6_MakeConvertSampleSiteCoordinateDF.R  | Prepare for clustering (script 7) |
 | 1_generateMapsAndMovementMetrics/1_7_ComparePoOMaps.R                     | Clustering to group individuals by similar probability of origin (PoO) maps |
 | 1_generateMapsAndMovementMetrics/1_8_MetricsConnectingPoOToSampleSite.R   | Estimate distance and direction of travel metrics for each individual|
-2_fitModels.R                                                               | Fit models. |
+| 2_models/2_1_fitModels.R                                                               | Fit models. |
 | 3_visualizeResults/3_1_plotd2HHistogram.R                                 | Plot histogram of adjusted d2H values (Figure S1) |
 | 3_visualizeResults/3_2_plotSampleInventoryMap.R                           | Plot sample acquisitions (Figure 2) | 
 | 3_visualizeResults/3_3_TableSummarizeTransferFunctions.R                  | Generate data for table summarizing transfer functions |

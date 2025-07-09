@@ -1,5 +1,5 @@
 # 0. Setup ------
-source("R/0_setup.R")
+source("0_setup/0_1_setup.R")
 library(splines)
 library(brms)
 library(bayesplot)
